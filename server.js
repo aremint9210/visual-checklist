@@ -37,6 +37,11 @@ const upload = multer({
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+const DIST_DIR = path.join(__dirname, 'dist');
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+}
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Helper: Read JSON file safely
@@ -848,6 +853,18 @@ app.delete('/api/feedback/:id', (req, res) => {
   feedbacks = feedbacks.filter(f => f.id !== req.params.id);
   writeJSON(FEEDBACK_FILE, feedbacks);
   res.json({ success: true, message: 'Feedback removed' });
+});
+
+// SPA wildcard fallback
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+    return next();
+  }
+  const distIndex = path.join(__dirname, 'dist', 'index.html');
+  if (fs.existsSync(distIndex)) {
+    return res.sendFile(distIndex);
+  }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start Server

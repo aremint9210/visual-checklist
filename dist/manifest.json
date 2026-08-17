@@ -1,0 +1,17 @@
+{
+  "name": "Visual Inspection Checklist",
+  "short_name": "Inspection",
+  "description": "Port Crane & Equipment Visual Inspection System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
