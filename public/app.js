@@ -1,26 +1,88 @@
 /**
  * Visual Inspection Checklist & Condition-Based Maintenance (CBM) System
- * Features:
- * 1. Mobile-First Inspection Form & 1-Tap Ticking
- * 2. Defect Lifecycle & Active Carry-Forward Issue Tracking
- * 3. 1-Tap WhatsApp & Email Critical Alert Dispatcher
- * 4. Voice-to-Text Speech Recognition (🎙️)
- * 5. CBM Predictive Analytics, Failure Hotspots & Crane Reliability Ranking
- * 6. Historical Track Back & Excel Export (.xlsx)
+ * Mobile-First, Touch-Optimized with Offline Sync, Defect Lifecycle & 1-Tap Alerts
  */
 
 (function () {
   'use strict';
 
+  // Built-in Standard Template (Instant 0ms render fallback)
+  const DEFAULT_TEMPLATE = {
+    title: "Port Equipment Visual Inspection Checklist",
+    version: "1.0",
+    categories: [
+      {
+        id: 1,
+        name: "Structural & Mechanical Components",
+        items: [
+          { no: "1.1", description: "Steel structure condition (cracks, heavy rust, deformation, weld integrity)", applicableTo: "ALL", defectTags: ["Cracks", "Heavy Rust", "Deformation", "Weld Damage", "Paint Peeling"] },
+          { no: "1.2", description: "Gantry wheel assemblies, bogies, and safety guards", applicableTo: "ALL", defectTags: ["Wheel Wear", "Flange Damage", "Loose Bolts", "Guard Missing", "Abnormal Noise"] },
+          { no: "1.3", description: "Trolley structure, rollers, frame, and safety bumpers", applicableTo: "ALL", defectTags: ["Roller Wear", "Frame Crack", "Bumper Damaged", "Misalignment"] },
+          { no: "1.4", description: "Boom / Jib structure, hinge pins, and lock mechanisms (QC specific)", applicableTo: "QC", defectTags: ["Hinge Pin Wear", "Locking Fault", "Structure Crack", "Lube Lack"] },
+          { no: "1.5", description: "Rubber tyres condition, tread depth, rim integrity, pressure (RTG specific)", applicableTo: "RTG", defectTags: ["Low Pressure", "Tread Worn", "Rim Crack", "Sidewall Damage", "Lug Nut Loose"] },
+          { no: "1.6", description: "Walkways, platforms, handrails, ladders, and safety cages", applicableTo: "ALL", defectTags: ["Damaged Handrail", "Loose Grating", "Corrosion", "Slip Hazard", "Obstruction"] }
+        ]
+      },
+      {
+        id: 2,
+        name: "Wire Ropes & Sheaves System",
+        items: [
+          { no: "2.1", description: "Hoist wire rope condition (kinking, broken wires, strand fraying, corrosion)", applicableTo: "ALL", defectTags: ["Broken Wires", "Kinking", "Corrosion", "Strand Fraying", "Dry Rope / Lack Lube"] },
+          { no: "2.2", description: "Trolley / Boom wire rope tension, condition, and spooling on drums", applicableTo: "ALL", defectTags: ["Slack Rope", "Uneven Spooling", "Rope Crossover", "Groove Wear"] },
+          { no: "2.3", description: "Wire rope sheaves, grooves, flanges, and rope retainers", applicableTo: "ALL", defectTags: ["Sheave Flange Chipped", "Groove Wear", "Retainer Missing", "Bearing Noise"] },
+          { no: "2.4", description: "Rope anchors, sockets, clamps, and equalizer sheaves", applicableTo: "ALL", defectTags: ["Loose Clamp", "Pin Wear", "Socket Corrosion", "Cotter Pin Missing"] }
+        ]
+      },
+      {
+        id: 3,
+        name: "Spreader & Lifting Attachment",
+        items: [
+          { no: "3.1", description: "Spreader main frame integrity and flipper arms condition", applicableTo: "ALL", defectTags: ["Flipper Bent", "Frame Crack", "Cylinder Leak", "Wear Pad Gone"] },
+          { no: "3.2", description: "Twistlocks condition, pins, wear indicator, and locking visual flags", applicableTo: "ALL", defectTags: ["Twistlock Worn", "Flag Damaged", "Sensor Fault", "Pin Play"] },
+          { no: "3.3", description: "Telescopic beam mechanism, wear pads, and guides", applicableTo: "ALL", defectTags: ["Wear Pad Loose", "Extension Sticking", "Guide Misaligned", "Lube Lack"] },
+          { no: "3.4", description: "Hydraulic hoses, cylinders, fittings, and leakages on spreader", applicableTo: "ALL", defectTags: ["Oil Leak", "Hose Abrasion", "Fitting Loose", "Cylinder Weep"] }
+        ]
+      },
+      {
+        id: 4,
+        name: "Hydraulics, Engine & Mechanical Drives",
+        items: [
+          { no: "4.1", description: "Main engine / Genset unit oil level, coolants, belts, and leaks (RTG specific)", applicableTo: "RTG", defectTags: ["Low Oil", "Coolant Low", "Belt Cracking", "Fuel Leak", "Exhaust Smoke"] },
+          { no: "4.2", description: "Hydraulic power pack (HPU) oil level, pump status, and filter indicators", applicableTo: "ALL", defectTags: ["Low Level", "Filter Clogged", "Pump Noise", "Tank Sweating", "Temp High"] },
+          { no: "4.3", description: "Gearboxes (Main Hoist, Trolley, Gantry) oil leaks and mounting integrity", applicableTo: "ALL", defectTags: ["Oil Seepage", "Sight Glass Dirty", "Mounting Loose", "Vibration"] },
+          { no: "4.4", description: "Service & Emergency Brakes (thrusters, brake pads, disk/drum condition)", applicableTo: "ALL", defectTags: ["Pad Worn", "Disc Grooved", "Thruster Leak", "Spring Weak", "Air Gap Bad"] }
+        ]
+      },
+      {
+        id: 5,
+        name: "Electrical Systems & Cabins",
+        items: [
+          { no: "5.1", description: "High-voltage cable reel (Festoon/E-bar/Cable Drum) & trailing cable condition", applicableTo: "ALL", defectTags: ["Cable Sheath Cut", "Tension Uneven", "Roller Stuck", "Guide Broken"] },
+          { no: "5.2", description: "Electrical control panels, junction boxes, and door gaskets", applicableTo: "ALL", defectTags: ["Door Gasket Damaged", "Moisture Inside", "Latch Broken", "Dust Build-up"] },
+          { no: "5.3", description: "Operator cabin visual condition, glass cleanliness, wiper, controls, and seat", applicableTo: "ALL", defectTags: ["Wiper Faulty", "Glass Dirty/Cracked", "Joystick Play", "AC Fault", "Seat Damaged"] },
+          { no: "5.4", description: "Floodlights, warning beacons, horns, sirens, and indicator lights", applicableTo: "ALL", defectTags: ["Light Blown", "Beacon Dead", "Siren Weak", "Lens Broken"] }
+        ]
+      },
+      {
+        id: 6,
+        name: "Safety Equipment & Housekeeping",
+        items: [
+          { no: "6.1", description: "Emergency Stop buttons (cabin, ground level, machinery house)", applicableTo: "ALL", defectTags: ["E-Stop Sticky", "Cover Broken", "Label Faded", "Unresponsive"] },
+          { no: "6.2", description: "Fire extinguishers availability, pressure gauge status, and inspection tags", applicableTo: "ALL", defectTags: ["Tag Expired", "Low Pressure", "Missing Extinguisher", "Pin Seal Broken"] },
+          { no: "6.3", description: "Limit switches visual condition (Anti-collision, Over-hoist, End-stops)", applicableTo: "ALL", defectTags: ["Arm Bent", "Switch Loose", "Flag Missing", "Wiring Exposed"] },
+          { no: "6.4", description: "Overall housekeeping, oil spillage, debris on walkways and engine room", applicableTo: "ALL", defectTags: ["Oil Spillage", "Debris / Trash", "Rag / Tool Left", "Water Ponding"] }
+        ]
+      }
+    ]
+  };
+
   // State
-  let template = null;
+  let template = DEFAULT_TEMPLATE;
   let inspections = [];
   let fleetStats = [];
   let alertSettings = {
     supervisorPhone: '+60123456789',
-    supervisorEmail: 'supervisor@port.com',
-    enableWhatsAppAlerts: true,
-    enableEmailAlerts: true
+    supervisorEmail: 'supervisor@port.com'
   };
   let currentOpenDefects = [];
 
@@ -40,11 +102,11 @@
   let historySearchQuery = '';
   let historyStatusFilter = 'ALL';
 
-  // Speech Recognition state
+  // Speech Recognition
   let recognition = null;
   let activeSpeechTargetInput = null;
 
-  // DOM Elements - Navigation & Core Form
+  // DOM Elements
   const tabs = document.querySelectorAll('.nav-tab');
   const tabPanes = document.querySelectorAll('.tab-pane');
   const checklistContainer = document.getElementById('checklist-categories-container');
@@ -134,58 +196,61 @@
   // INITIALIZATION
   // =========================================================================
 
-  async function init() {
-    setupSpeechRecognition();
-    setupTabNavigation();
+  function init() {
+    // 1. Immediately render checklist template (0ms latency guaranteed)
+    renderChecklist();
     setupDefaultFormValues();
+    setupTabNavigation();
     setupEventListeners();
-    await loadChecklistTemplate();
-    await loadInspections();
-    await loadFleetStats();
-    await loadAlertSettings();
-    await loadNetworkInfo();
+    setupSpeechRecognition();
     restoreDraftFromStorage();
+
+    // 2. Load dynamic data in parallel in background without blocking UI
+    loadChecklistTemplate();
+    loadInspections();
+    loadFleetStats();
+    loadAlertSettings();
+    loadNetworkInfo();
   }
 
   // Setup Web Speech API for voice dictation
   function setupSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
-      recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
+      try {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
 
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        if (activeSpeechTargetInput) {
-          const currentVal = activeSpeechTargetInput.value.trim();
-          activeSpeechTargetInput.value = currentVal ? `${currentVal}. ${transcript}` : transcript;
-          activeSpeechTargetInput.dispatchEvent(new Event('input', { bubbles: true }));
-          showToast(`Transcribed: "${transcript}"`, 'success');
-        }
-        stopListening();
-      };
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          if (activeSpeechTargetInput) {
+            const currentVal = activeSpeechTargetInput.value.trim();
+            activeSpeechTargetInput.value = currentVal ? `${currentVal}. ${transcript}` : transcript;
+            activeSpeechTargetInput.dispatchEvent(new Event('input', { bubbles: true }));
+            showToast(`Transcribed: "${transcript}"`, 'success');
+          }
+          stopListening();
+        };
 
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        showToast(`Voice error: ${event.error}`, 'error');
-        stopListening();
-      };
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          stopListening();
+        };
 
-      recognition.onend = () => {
-        stopListening();
-      };
-    } else {
-      if (btnVoiceGeneral) {
-        btnVoiceGeneral.title = 'Speech-to-text not supported in this browser';
+        recognition.onend = () => {
+          stopListening();
+        };
+      } catch (e) {
+        console.warn('SpeechRecognition init error:', e);
       }
     }
   }
 
   function startListening(targetInput, triggerBtn) {
     if (!recognition) {
-      showToast('Speech recognition is not supported on this browser (Try Chrome or Safari)', 'info');
+      showToast('Speech recognition not available on this browser', 'info');
       return;
     }
     activeSpeechTargetInput = targetInput;
@@ -211,11 +276,11 @@
     const hh = String(today.getHours()).padStart(2, '0');
     const min = String(today.getMinutes()).padStart(2, '0');
 
-    dateInput.value = `${yyyy}-${mm}-${dd}`;
-    timeInput.value = `${hh}:${min}`;
+    if (dateInput && !dateInput.value) dateInput.value = `${yyyy}-${mm}-${dd}`;
+    if (timeInput && !timeInput.value) timeInput.value = `${hh}:${min}`;
 
     const savedInspector = localStorage.getItem('cbm_inspector_name');
-    if (savedInspector) {
+    if (savedInspector && inspectorInput && !inspectorInput.value) {
       inspectorInput.value = savedInspector;
     }
   }
@@ -259,25 +324,31 @@
   }
 
   // =========================================================================
-  // API LOADERS
+  // API LOADERS (Async Background)
   // =========================================================================
 
   async function loadChecklistTemplate() {
     try {
       const res = await fetch('/api/checklist-template');
-      template = await res.json();
-      renderChecklist();
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.categories && data.categories.length > 0) {
+          template = data;
+          renderChecklist();
+        }
+      }
     } catch (err) {
-      console.error('Failed to load checklist template:', err);
-      showToast('Could not load template from server', 'error');
+      console.warn('Using built-in template fallback:', err);
     }
   }
 
   async function loadInspections() {
     try {
       const res = await fetch('/api/inspections');
-      inspections = await res.json();
-      renderHistoryList();
+      if (res.ok) {
+        inspections = await res.json();
+        renderHistoryList();
+      }
     } catch (err) {
       console.error('Failed to load inspections:', err);
     }
@@ -286,8 +357,10 @@
   async function loadFleetStats() {
     try {
       const res = await fetch('/api/equipment/stats');
-      fleetStats = await res.json();
-      renderFleetGrid();
+      if (res.ok) {
+        fleetStats = await res.json();
+        renderFleetGrid();
+      }
     } catch (err) {
       console.error('Failed to load fleet stats:', err);
     }
@@ -296,9 +369,11 @@
   async function loadAlertSettings() {
     try {
       const res = await fetch('/api/settings/alerts');
-      alertSettings = await res.json();
-      if (settingPhoneInput) settingPhoneInput.value = alertSettings.supervisorPhone || '';
-      if (settingEmailInput) settingEmailInput.value = alertSettings.supervisorEmail || '';
+      if (res.ok) {
+        alertSettings = await res.json();
+        if (settingPhoneInput) settingPhoneInput.value = alertSettings.supervisorPhone || '';
+        if (settingEmailInput) settingEmailInput.value = alertSettings.supervisorEmail || '';
+      }
     } catch (e) {
       console.error('Failed to load alert settings:', e);
     }
@@ -307,9 +382,9 @@
   async function loadCBMAnalytics() {
     try {
       const res = await fetch('/api/analytics/cbm-summary');
+      if (!res.ok) return;
       const data = await res.json();
 
-      // Update KPI Cards
       if (cbmFleetScore) cbmFleetScore.textContent = `${data.fleetHealthScore}%`;
       if (cbmFleetStatus) {
         if (data.fleetHealthScore >= 90) {
@@ -323,9 +398,8 @@
           cbmFleetStatus.textContent = 'ATTENTION NEEDED';
         }
       }
-      if (cbmTotalDefects) cbmTotalDefects.textContent = data.totalPoor + data.totalSatisfied;
+      if (cbmTotalDefects) cbmTotalDefects.textContent = (data.totalPoor || 0) + (data.totalSatisfied || 0);
 
-      // Render Failure Hotspots
       if (cbmHotspotsContainer) {
         if (!data.topHotspots || data.topHotspots.length === 0) {
           cbmHotspotsContainer.innerHTML = `<p class="text-muted text-center" style="padding: 20px;">No recurring defects recorded yet.</p>`;
@@ -357,7 +431,6 @@
         }
       }
 
-      // Render Crane Reliability Rankings Table
       if (cbmRankingContainer) {
         if (!data.equipmentRankings || data.equipmentRankings.length === 0) {
           cbmRankingContainer.innerHTML = `<p class="text-muted text-center" style="padding: 20px;">No crane ranking data yet.</p>`;
@@ -408,14 +481,16 @@
     try {
       const currentOrigin = window.location.origin;
       const res = await fetch(`/api/network-info?origin=${encodeURIComponent(currentOrigin)}`);
-      const data = await res.json();
-      const mobileUrl = data.mobileUrl || currentOrigin;
-      if (data.qrCodeDataUrl) {
-        modalQrImg.src = data.qrCodeDataUrl;
-        if (qrCodeImg) qrCodeImg.src = data.qrCodeDataUrl;
+      if (res.ok) {
+        const data = await res.json();
+        const mobileUrl = data.mobileUrl || currentOrigin;
+        if (data.qrCodeDataUrl) {
+          if (modalQrImg) modalQrImg.src = data.qrCodeDataUrl;
+          if (qrCodeImg) qrCodeImg.src = data.qrCodeDataUrl;
+        }
+        if (modalQrUrlText) modalQrUrlText.textContent = mobileUrl;
+        if (mobileUrlInput) mobileUrlInput.value = mobileUrl;
       }
-      modalQrUrlText.textContent = mobileUrl;
-      if (mobileUrlInput) mobileUrlInput.value = mobileUrl;
     } catch (err) {
       console.error('Failed to load network info:', err);
     }
@@ -426,19 +501,20 @@
   // =========================================================================
 
   async function checkEquipmentOpenDefects(equipId) {
-    if (!equipId) {
-      activeDefectsBanner.style.display = 'none';
+    if (!equipId || !activeDefectsBanner) {
+      if (activeDefectsBanner) activeDefectsBanner.style.display = 'none';
       return;
     }
 
     try {
       const res = await fetch(`/api/equipment/${encodeURIComponent(equipId)}/open-defects`);
+      if (!res.ok) return;
       const data = await res.json();
       currentOpenDefects = data.openDefects || [];
 
       if (currentOpenDefects.length > 0) {
-        defectsBannerHeading.textContent = `Active Issues on ${equipId} from ${data.lastInspectionDate}`;
-        defectsBannerCount.textContent = `${currentOpenDefects.length} Issue(s)`;
+        if (defectsBannerHeading) defectsBannerHeading.textContent = `Active Issues on ${equipId} from ${data.lastInspectionDate}`;
+        if (defectsBannerCount) defectsBannerCount.textContent = `${currentOpenDefects.length} Issue(s)`;
 
         let defHtml = '';
         currentOpenDefects.forEach(defect => {
@@ -467,10 +543,9 @@
           `;
         });
 
-        activeDefectsList.innerHTML = defHtml;
+        if (activeDefectsList) activeDefectsList.innerHTML = defHtml;
         activeDefectsBanner.style.display = 'block';
 
-        // Attach Rectify Listeners
         document.querySelectorAll('.btn-rectify-defect').forEach(btn => {
           btn.addEventListener('click', () => {
             const itemNo = btn.getAttribute('data-item-no');
@@ -481,13 +556,11 @@
         activeDefectsBanner.style.display = 'none';
       }
     } catch (e) {
-      console.error('Failed to check open defects:', e);
-      activeDefectsBanner.style.display = 'none';
+      if (activeDefectsBanner) activeDefectsBanner.style.display = 'none';
     }
   }
 
   function rectifyDefect(itemNo) {
-    // Set item rating to GOOD
     if (!currentDraft.items[itemNo]) {
       currentDraft.items[itemNo] = { status: '', remark: '', tags: [], photo: null };
     }
@@ -498,7 +571,6 @@
     renderChecklist();
     saveDraftToStorage();
 
-    // Scroll to item
     const card = document.getElementById(`item-card-${itemNo.replace('.', '_')}`);
     if (card) {
       card.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -510,7 +582,7 @@
   // =========================================================================
 
   function renderChecklist() {
-    if (!template || !template.categories) return;
+    if (!checklistContainer || !template || !template.categories) return;
 
     let html = '';
 
@@ -563,7 +635,6 @@
               ${item.applicableTo !== 'ALL' ? `<span class="item-applies-tag">${item.applicableTo}</span>` : ''}
             </div>
 
-            <!-- 3-Way Rating Buttons -->
             <div class="rating-buttons-group">
               <button type="button" class="btn-rating btn-good ${status === 'GOOD' ? 'active' : ''}" 
                 data-item-no="${item.no}" data-rating="GOOD">
@@ -593,7 +664,6 @@
               </button>
             </div>
 
-            <!-- Item Remark, Voice Mic & Defect Tags Drawer -->
             <div class="item-expand-details" id="expand-${item.no.replace('.', '_')}" style="display: ${showExpand ? 'flex' : 'none'};">
               ${item.defectTags && item.defectTags.length > 0 ? `
                 <div class="defect-tags-row">
@@ -613,7 +683,6 @@
                   data-item-no="${item.no}"
                   value="${escapeHtml(itemState.remark || '')}">
 
-                <!-- Voice Mic for item remark -->
                 <button type="button" class="btn-mic-inline btn-voice-item" data-item-no="${item.no}" title="Speak Remark">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"></path>
@@ -657,7 +726,7 @@
     document.querySelectorAll('.category-header').forEach(header => {
       header.addEventListener('click', () => {
         const group = header.closest('.category-group');
-        group.classList.toggle('collapsed');
+        if (group) group.classList.toggle('collapsed');
       });
     });
 
@@ -688,7 +757,6 @@
       });
     });
 
-    // Voice Dictation for item remarks
     document.querySelectorAll('.btn-voice-item').forEach(micBtn => {
       micBtn.addEventListener('click', () => {
         const itemNo = micBtn.getAttribute('data-item-no');
@@ -738,20 +806,24 @@
 
     const currentStatus = currentDraft.items[itemNo].status;
 
-    card.querySelectorAll('.btn-rating').forEach(b => {
-      if (b.getAttribute('data-rating') === currentStatus) {
-        b.classList.add('active');
-      } else {
-        b.classList.remove('active');
+    if (card) {
+      card.querySelectorAll('.btn-rating').forEach(b => {
+        if (b.getAttribute('data-rating') === currentStatus) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+
+      card.className = `checklist-item-card ${currentStatus ? 'status-' + currentStatus.toLowerCase() : ''}`;
+    }
+
+    if (expandDiv) {
+      if (currentStatus === 'SATISFIED' || currentStatus === 'POOR') {
+        expandDiv.style.display = 'flex';
+      } else if (!currentDraft.items[itemNo].remark && !currentDraft.items[itemNo].photo) {
+        expandDiv.style.display = 'none';
       }
-    });
-
-    card.className = `checklist-item-card ${currentStatus ? 'status-' + currentStatus.toLowerCase() : ''}`;
-
-    if (currentStatus === 'SATISFIED' || currentStatus === 'POOR') {
-      expandDiv.style.display = 'flex';
-    } else if (!currentDraft.items[itemNo].remark && !currentDraft.items[itemNo].photo) {
-      expandDiv.style.display = 'none';
     }
 
     updateCategoryPill(itemNo);
@@ -880,20 +952,22 @@
       });
     });
 
-    progressCount.textContent = `${checked} / ${total}`;
+    if (progressCount) progressCount.textContent = `${checked} / ${total}`;
     const pct = total > 0 ? (checked / total) * 100 : 0;
-    progressFillBar.style.width = `${pct}%`;
+    if (progressFillBar) progressFillBar.style.width = `${pct}%`;
 
-    badgeGoodCount.textContent = `${good} Good`;
-    badgeSatisfiedCount.textContent = `${satisfied} Satisfied`;
-    badgePoorCount.textContent = `${poor} Poor`;
+    if (badgeGoodCount) badgeGoodCount.textContent = `${good} Good`;
+    if (badgeSatisfiedCount) badgeSatisfiedCount.textContent = `${satisfied} Satisfied`;
+    if (badgePoorCount) badgePoorCount.textContent = `${poor} Poor`;
 
-    if (checked === 0) {
-      floatingSummary.textContent = 'Ready to inspect';
-    } else if (checked < total) {
-      floatingSummary.textContent = `${checked}/${total} Checked • ${poor > 0 ? `🔴 ${poor} Poor` : 'In Progress'}`;
-    } else {
-      floatingSummary.textContent = poor > 0 ? `⚠️ ${poor} Defect(s) Found` : `✅ All ${total} Items Checked`;
+    if (floatingSummary) {
+      if (checked === 0) {
+        floatingSummary.textContent = 'Ready to inspect';
+      } else if (checked < total) {
+        floatingSummary.textContent = `${checked}/${total} Checked • ${poor > 0 ? `🔴 ${poor} Poor` : 'In Progress'}`;
+      } else {
+        floatingSummary.textContent = poor > 0 ? `⚠️ ${poor} Defect(s) Found` : `✅ All ${total} Items Checked`;
+      }
     }
   }
 
@@ -902,14 +976,14 @@
   // =========================================================================
 
   function saveDraftToStorage() {
-    currentDraft.equipmentId = equipmentInput.value.trim().toUpperCase();
-    currentDraft.equipmentType = equipmentTypeSelect.value;
-    currentDraft.inspectorName = inspectorInput.value.trim();
-    currentDraft.inspectionDate = dateInput.value;
-    currentDraft.inspectionTime = timeInput.value;
-    currentDraft.location = locationInput.value.trim();
-    currentDraft.shift = shiftSelect.value;
-    currentDraft.generalNotes = notesInput.value.trim();
+    if (equipmentInput) currentDraft.equipmentId = equipmentInput.value.trim().toUpperCase();
+    if (equipmentTypeSelect) currentDraft.equipmentType = equipmentTypeSelect.value;
+    if (inspectorInput) currentDraft.inspectorName = inspectorInput.value.trim();
+    if (dateInput) currentDraft.inspectionDate = dateInput.value;
+    if (timeInput) currentDraft.inspectionTime = timeInput.value;
+    if (locationInput) currentDraft.location = locationInput.value.trim();
+    if (shiftSelect) currentDraft.shift = shiftSelect.value;
+    if (notesInput) currentDraft.generalNotes = notesInput.value.trim();
 
     localStorage.setItem('cbm_inspection_draft', JSON.stringify(currentDraft));
     if (currentDraft.inspectorName) {
@@ -924,15 +998,15 @@
         const parsed = JSON.parse(saved);
         currentDraft = { ...currentDraft, ...parsed };
 
-        if (currentDraft.equipmentId) {
+        if (currentDraft.equipmentId && equipmentInput) {
           equipmentInput.value = currentDraft.equipmentId;
           checkEquipmentOpenDefects(currentDraft.equipmentId);
         }
-        if (currentDraft.equipmentType) equipmentTypeSelect.value = currentDraft.equipmentType;
-        if (currentDraft.inspectorName) inspectorInput.value = currentDraft.inspectorName;
-        if (currentDraft.location) locationInput.value = currentDraft.location;
-        if (currentDraft.shift) shiftSelect.value = currentDraft.shift;
-        if (currentDraft.generalNotes) notesInput.value = currentDraft.generalNotes;
+        if (currentDraft.equipmentType && equipmentTypeSelect) equipmentTypeSelect.value = currentDraft.equipmentType;
+        if (currentDraft.inspectorName && inspectorInput) inspectorInput.value = currentDraft.inspectorName;
+        if (currentDraft.location && locationInput) locationInput.value = currentDraft.location;
+        if (currentDraft.shift && shiftSelect) shiftSelect.value = currentDraft.shift;
+        if (currentDraft.generalNotes && notesInput) notesInput.value = currentDraft.generalNotes;
 
         highlightMatchingEquipmentChip(currentDraft.equipmentId);
         renderChecklist();
@@ -943,20 +1017,22 @@
   }
 
   async function saveInspection() {
-    const equipId = equipmentInput.value.trim().toUpperCase();
+    const equipId = equipmentInput ? equipmentInput.value.trim().toUpperCase() : '';
     if (!equipId) {
       showToast('Please enter an Equipment ID (e.g. Q75)', 'error');
-      equipmentInput.focus();
+      if (equipmentInput) equipmentInput.focus();
       return;
     }
 
     saveDraftToStorage();
 
-    btnSaveInspection.disabled = true;
-    btnSaveInspection.innerHTML = `
-      <div class="spinner" style="width:16px;height:16px;margin:0;border-width:2px;"></div>
-      <span>Saving...</span>
-    `;
+    if (btnSaveInspection) {
+      btnSaveInspection.disabled = true;
+      btnSaveInspection.innerHTML = `
+        <div class="spinner" style="width:16px;height:16px;margin:0;border-width:2px;"></div>
+        <span>Saving...</span>
+      `;
+    }
 
     try {
       const payload = {
@@ -976,23 +1052,21 @@
 
       showToast(`Inspection saved for ${equipId}!`, 'success');
 
-      // Clear draft
       localStorage.removeItem('cbm_inspection_draft');
       currentDraft.items = {};
       currentDraft.generalNotes = '';
-      notesInput.value = '';
+      if (notesInput) notesInput.value = '';
 
-      // Reload inspections & stats
       await loadInspections();
       await loadFleetStats();
 
-      // Check if critical defects were found: Trigger 1-Tap Alert Modal!
       if (savedInsp.summary && (savedInsp.summary.poorCount > 0 || savedInsp.summary.satisfiedCount > 0)) {
         triggerCriticalAlertModal(savedInsp);
       } else {
-        // Switch to history tab
-        historySearchInput.value = equipId;
-        historySearchQuery = equipId;
+        if (historySearchInput) {
+          historySearchInput.value = equipId;
+          historySearchQuery = equipId;
+        }
         renderHistoryList();
         switchTab('history-tab');
       }
@@ -1002,23 +1076,24 @@
       console.error('Error saving inspection:', err);
       showToast('Inspection saved locally', 'info');
     } finally {
-      btnSaveInspection.disabled = false;
-      btnSaveInspection.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
-          <polyline points="17 21 17 13 7 13 7 21"></polyline>
-          <polyline points="7 3 7 8 15 8"></polyline>
-        </svg>
-        <span>Save Inspection</span>
-      `;
+      if (btnSaveInspection) {
+        btnSaveInspection.disabled = false;
+        btnSaveInspection.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Save Inspection</span>
+        `;
+      }
     }
   }
 
-  // Trigger 1-Tap WhatsApp & Email Modal
   function triggerCriticalAlertModal(insp) {
-    alertModalEquip.textContent = insp.equipmentId;
+    if (!alertModal) return;
+    if (alertModalEquip) alertModalEquip.textContent = insp.equipmentId;
 
-    // Collect defect list
     const defectLines = [];
     if (insp.items) {
       for (const [no, item] of Object.entries(insp.items)) {
@@ -1043,17 +1118,15 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
 
 🌐 View Full Report: ${window.location.origin}`;
 
-    alertMessagePreview.textContent = alertText;
+    if (alertMessagePreview) alertMessagePreview.textContent = alertText;
 
-    // Build WhatsApp URL
     const cleanPhone = (alertSettings.supervisorPhone || '').replace(/[^0-9+]/g, '');
     const waUrl = `https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(alertText)}`;
-    btnSendWhatsApp.href = waUrl;
+    if (btnSendWhatsApp) btnSendWhatsApp.href = waUrl;
 
-    // Build Email URL
     const mailSubject = `🚨 CRITICAL DEFECT ALERT: ${insp.equipmentId} (${insp.inspectionDate})`;
     const mailUrl = `mailto:${alertSettings.supervisorEmail || 'supervisor@port.com'}?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(alertText)}`;
-    btnSendEmail.href = mailUrl;
+    if (btnSendEmail) btnSendEmail.href = mailUrl;
 
     alertModal.classList.add('open');
   }
@@ -1062,7 +1135,7 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
     if (confirm('Are you sure you want to reset all checklist items?')) {
       currentDraft.items = {};
       currentDraft.generalNotes = '';
-      notesInput.value = '';
+      if (notesInput) notesInput.value = '';
       localStorage.removeItem('cbm_inspection_draft');
       renderChecklist();
       showToast('Form reset', 'info');
@@ -1074,7 +1147,7 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
   // =========================================================================
 
   function renderHistoryList() {
-    if (!inspections) return;
+    if (!historyListContainer || !inspections) return;
 
     let filtered = [...inspections];
 
@@ -1091,7 +1164,7 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
       filtered = filtered.filter(item => item.summary?.overallStatus === historyStatusFilter);
     }
 
-    historyCountBadge.textContent = `${filtered.length} Record(s) Found`;
+    if (historyCountBadge) historyCountBadge.textContent = `${filtered.length} Record(s) Found`;
 
     if (filtered.length === 0) {
       historyListContainer.innerHTML = `
@@ -1228,11 +1301,11 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
 
   function openDetailModal(id) {
     const insp = inspections.find(item => item.id === id);
-    if (!insp || !template) return;
+    if (!insp || !template || !detailModal) return;
 
-    modalEquipBadge.textContent = insp.equipmentId;
-    modalTitle.textContent = `Report: ${insp.inspectionDate} (${insp.inspectorName})`;
-    modalBtnDownloadExcel.href = `/api/export/excel/${insp.id}`;
+    if (modalEquipBadge) modalEquipBadge.textContent = insp.equipmentId;
+    if (modalTitle) modalTitle.textContent = `Report: ${insp.inspectionDate} (${insp.inspectorName})`;
+    if (modalBtnDownloadExcel) modalBtnDownloadExcel.href = `/api/export/excel/${insp.id}`;
 
     let html = `
       <div style="background-color: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-md); margin-bottom: 16px;">
@@ -1304,7 +1377,7 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
     }
 
     html += `</div>`;
-    modalDetailBody.innerHTML = html;
+    if (modalDetailBody) modalDetailBody.innerHTML = html;
     detailModal.classList.add('open');
   }
 
@@ -1313,12 +1386,14 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
   // =========================================================================
 
   function renderFleetGrid() {
-    if (!fleetStats || fleetStats.length === 0) {
-      fleetGridContainer.innerHTML = `
-        <div class="card text-center" style="padding: 30px;">
-          <p class="text-muted">No equipment records available yet. Complete an inspection to populate fleet tracking.</p>
-        </div>
-      `;
+    if (!fleetGridContainer || !fleetStats || fleetStats.length === 0) {
+      if (fleetGridContainer) {
+        fleetGridContainer.innerHTML = `
+          <div class="card text-center" style="padding: 30px;">
+            <p class="text-muted">No equipment records available yet. Complete an inspection to populate fleet tracking.</p>
+          </div>
+        `;
+      }
       return;
     }
 
@@ -1378,8 +1453,10 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
     document.querySelectorAll('.btn-history-equip').forEach(btn => {
       btn.addEventListener('click', () => {
         const equip = btn.getAttribute('data-equip');
-        historySearchInput.value = equip;
-        historySearchQuery = equip;
+        if (historySearchInput) {
+          historySearchInput.value = equip;
+          historySearchQuery = equip;
+        }
         renderHistoryList();
         switchTab('history-tab');
       });
@@ -1399,46 +1476,55 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
       });
     });
 
-    btnClearEquipment.addEventListener('click', () => {
-      equipmentInput.value = '';
-      equipmentInput.focus();
-      highlightMatchingEquipmentChip('');
-      activeDefectsBanner.style.display = 'none';
-      saveDraftToStorage();
-    });
+    if (btnClearEquipment) {
+      btnClearEquipment.addEventListener('click', () => {
+        if (equipmentInput) {
+          equipmentInput.value = '';
+          equipmentInput.focus();
+        }
+        highlightMatchingEquipmentChip('');
+        if (activeDefectsBanner) activeDefectsBanner.style.display = 'none';
+        saveDraftToStorage();
+      });
+    }
 
-    equipmentInput.addEventListener('input', () => {
-      const val = equipmentInput.value.trim().toUpperCase();
-      highlightMatchingEquipmentChip(val);
-      checkEquipmentOpenDefects(val);
-      saveDraftToStorage();
-    });
+    if (equipmentInput) {
+      equipmentInput.addEventListener('input', () => {
+        const val = equipmentInput.value.trim().toUpperCase();
+        highlightMatchingEquipmentChip(val);
+        checkEquipmentOpenDefects(val);
+        saveDraftToStorage();
+      });
+    }
 
     [inspectorInput, dateInput, timeInput, locationInput, shiftSelect, equipmentTypeSelect, notesInput].forEach(elem => {
-      elem.addEventListener('change', saveDraftToStorage);
+      if (elem) elem.addEventListener('change', saveDraftToStorage);
     });
 
-    // Voice Dictation for General Notes
-    if (btnVoiceGeneral) {
+    if (btnVoiceGeneral && notesInput) {
       btnVoiceGeneral.addEventListener('click', () => {
         startListening(notesInput, btnVoiceGeneral);
       });
     }
 
-    btnQuickFillGood.addEventListener('click', quickFillAllGood);
-    btnSaveInspection.addEventListener('click', saveInspection);
-    btnResetForm.addEventListener('click', resetChecklistForm);
+    if (btnQuickFillGood) btnQuickFillGood.addEventListener('click', quickFillAllGood);
+    if (btnSaveInspection) btnSaveInspection.addEventListener('click', saveInspection);
+    if (btnResetForm) btnResetForm.addEventListener('click', resetChecklistForm);
 
-    historySearchInput.addEventListener('input', (e) => {
-      historySearchQuery = e.target.value;
-      renderHistoryList();
-    });
+    if (historySearchInput) {
+      historySearchInput.addEventListener('input', (e) => {
+        historySearchQuery = e.target.value;
+        renderHistoryList();
+      });
+    }
 
-    btnClearHistorySearch.addEventListener('click', () => {
-      historySearchInput.value = '';
-      historySearchQuery = '';
-      renderHistoryList();
-    });
+    if (btnClearHistorySearch) {
+      btnClearHistorySearch.addEventListener('click', () => {
+        if (historySearchInput) historySearchInput.value = '';
+        historySearchQuery = '';
+        renderHistoryList();
+      });
+    }
 
     filterPills.forEach(pill => {
       pill.addEventListener('click', () => {
@@ -1449,15 +1535,12 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
       });
     });
 
-    // Alert Settings Form
     if (formAlertSettings) {
       formAlertSettings.addEventListener('submit', async (e) => {
         e.preventDefault();
         const newSettings = {
-          supervisorPhone: settingPhoneInput.value.trim(),
-          supervisorEmail: settingEmailInput.value.trim(),
-          enableWhatsAppAlerts: true,
-          enableEmailAlerts: true
+          supervisorPhone: settingPhoneInput ? settingPhoneInput.value.trim() : '',
+          supervisorEmail: settingEmailInput ? settingEmailInput.value.trim() : ''
         };
 
         try {
@@ -1476,32 +1559,34 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
       });
     }
 
-    // Modal Close buttons
-    btnPhoneQr.addEventListener('click', () => qrModal.classList.add('open'));
-    btnCloseQrModal.addEventListener('click', () => qrModal.classList.remove('open'));
-    btnCloseQrFooter.addEventListener('click', () => qrModal.classList.remove('open'));
+    if (btnPhoneQr && qrModal) btnPhoneQr.addEventListener('click', () => qrModal.classList.add('open'));
+    if (btnCloseQrModal && qrModal) btnCloseQrModal.addEventListener('click', () => qrModal.classList.remove('open'));
+    if (btnCloseQrFooter && qrModal) btnCloseQrFooter.addEventListener('click', () => qrModal.classList.remove('open'));
 
-    btnCloseDetailModal.addEventListener('click', () => detailModal.classList.remove('open'));
-    modalBtnPrint.addEventListener('click', () => window.print());
+    if (btnCloseDetailModal && detailModal) btnCloseDetailModal.addEventListener('click', () => detailModal.classList.remove('open'));
+    if (modalBtnPrint) modalBtnPrint.addEventListener('click', () => window.print());
 
-    // Alert Modal Buttons
-    if (btnCloseAlertModal) btnCloseAlertModal.addEventListener('click', () => alertModal.classList.remove('open'));
-    if (btnDismissAlertModal) {
+    if (btnCloseAlertModal && alertModal) btnCloseAlertModal.addEventListener('click', () => alertModal.classList.remove('open'));
+    if (btnDismissAlertModal && alertModal) {
       btnDismissAlertModal.addEventListener('click', () => {
         alertModal.classList.remove('open');
-        // Switch to history tab
-        historySearchInput.value = equipmentInput.value.trim().toUpperCase();
-        historySearchQuery = historySearchInput.value;
+        const eq = equipmentInput ? equipmentInput.value.trim().toUpperCase() : '';
+        if (historySearchInput) {
+          historySearchInput.value = eq;
+          historySearchQuery = eq;
+        }
         renderHistoryList();
         switchTab('history-tab');
       });
     }
 
-    btnCopyMobileUrl.addEventListener('click', () => {
-      mobileUrlInput.select();
-      navigator.clipboard.writeText(mobileUrlInput.value);
-      showToast('Mobile URL copied to clipboard!', 'success');
-    });
+    if (btnCopyMobileUrl && mobileUrlInput) {
+      btnCopyMobileUrl.addEventListener('click', () => {
+        mobileUrlInput.select();
+        navigator.clipboard.writeText(mobileUrlInput.value);
+        showToast('Mobile URL copied to clipboard!', 'success');
+      });
+    }
 
     const btnBackupJson = document.getElementById('btn-backup-json');
     if (btnBackupJson) {
@@ -1527,8 +1612,8 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
   }
 
   function setEquipment(equip, type) {
-    equipmentInput.value = equip;
-    if (type) equipmentTypeSelect.value = type;
+    if (equipmentInput) equipmentInput.value = equip;
+    if (type && equipmentTypeSelect) equipmentTypeSelect.value = type;
     highlightMatchingEquipmentChip(equip);
     checkEquipmentOpenDefects(equip);
     saveDraftToStorage();
@@ -1546,6 +1631,7 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
   }
 
   function showToast(message, type = 'info') {
+    if (!toastContainer) return;
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     let icon = 'ℹ️';
@@ -1573,5 +1659,10 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
       .replace(/'/g, '&#039;');
   }
 
-  document.addEventListener('DOMContentLoaded', init);
+  // Start app immediately
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
