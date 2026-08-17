@@ -232,6 +232,21 @@
         </div>
       </div>
 
+      <!-- Instant Checklist Search & Quick Status Filters -->
+      <div class="card checklist-filter-card">
+        <div class="filter-search-row">
+          <div class="input-with-icon" style="flex: 1;">
+            <input type="text" id="checklist-search-input" class="form-input" placeholder="🔍 Search items (e.g. wire rope, brakes, oil, spreader, cabin)...">
+            <button type="button" id="btn-clear-checklist-search" class="btn-clear-input" style="display: none;">✕</button>
+          </div>
+          <div class="quick-view-pills">
+            <button type="button" class="view-pill active" data-view-filter="ALL">All Items</button>
+            <button type="button" class="view-pill" data-view-filter="UNCHECKED">⏳ Unchecked</button>
+            <button type="button" class="view-pill" data-view-filter="DEFECTS">⚠️ Flagged</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Checklist Categories Container (Dynamic from Template) -->
       <div id="checklist-categories-container" class="checklist-container">
         <!-- Injected via JavaScript -->

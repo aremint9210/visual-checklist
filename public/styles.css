@@ -632,6 +632,31 @@ body {
   gap: 8px;
 }
 
+.btn-cat-all-good {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-good-bg);
+  border: 1px solid var(--color-good-border);
+  color: var(--color-good);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-cat-all-good:hover {
+  background-color: var(--color-good);
+  color: #ffffff;
+  transform: scale(1.05);
+}
+
+.btn-cat-all-good:active {
+  transform: scale(0.95);
+}
+
 .category-count-pill {
   font-size: 11px;
   font-weight: 700;
@@ -657,6 +682,62 @@ body {
 
 .category-group.collapsed .category-items-list {
   display: none;
+}
+
+/* ==========================================================================
+   CHECKLIST INSTANT SEARCH & STATUS FILTER CARD
+   ========================================================================== */
+.checklist-filter-card {
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background-color: var(--bg-surface-elevated);
+}
+
+.filter-search-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (min-width: 600px) {
+  .filter-search-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.quick-view-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.view-pill {
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.view-pill:hover {
+  border-color: var(--color-primary);
+  color: var(--text-primary);
+}
+
+.view-pill.active {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
 }
 
 .category-items-list {

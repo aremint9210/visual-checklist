@@ -102,6 +102,8 @@
   let activeTab = 'inspect-tab';
   let historySearchQuery = '';
   let historyStatusFilter = 'ALL';
+  let checklistSearchQuery = '';
+  let checklistViewFilter = 'ALL';
 
   // Speech Recognition
   let recognition = null;
@@ -111,6 +113,9 @@
   const tabs = document.querySelectorAll('.nav-tab');
   const tabPanes = document.querySelectorAll('.tab-pane');
   const checklistContainer = document.getElementById('checklist-categories-container');
+  const checklistSearchInput = document.getElementById('checklist-search-input');
+  const btnClearChecklistSearch = document.getElementById('btn-clear-checklist-search');
+  const viewPills = document.querySelectorAll('.view-pill');
   const equipmentInput = document.getElementById('equipment-id-input');
   const equipmentTypeSelect = document.getElementById('equipment-type-select');
   const inspectorInput = document.getElementById('inspector-name-input');
@@ -611,6 +616,8 @@
   function renderChecklist() {
     if (!checklistContainer || !template || !template.categories) return;
 
+    const query = checklistSearchQuery.toLowerCase().trim();
+    let totalItemsRendered = 0;
     let html = '';
 
     template.categories.forEach(cat => {
@@ -626,14 +633,40 @@
 
       const isCompleted = checkedInCat === totalInCat && totalInCat > 0;
 
+      // Filter items according to search & view pills
+      const filteredItems = catItems.filter(item => {
+        const itemState = currentDraft.items[item.no] || {};
+        const status = itemState.status || '';
+
+        if (checklistViewFilter === 'UNCHECKED' && status) return false;
+        if (checklistViewFilter === 'DEFECTS' && status !== 'POOR' && status !== 'SATISFIED') return false;
+
+        if (!query) return true;
+        const matchNo = (item.no || '').toLowerCase().includes(query);
+        const matchDesc = (item.description || '').toLowerCase().includes(query);
+        const matchTags = (item.defectTags || []).some(t => t.toLowerCase().includes(query));
+        const matchRemark = (itemState.remark || '').toLowerCase().includes(query);
+        const matchCat = (cat.name || '').toLowerCase().includes(query);
+        return matchNo || matchDesc || matchTags || matchRemark || matchCat;
+      });
+
+      if (filteredItems.length === 0 && (query || checklistViewFilter !== 'ALL')) {
+        return;
+      }
+
+      totalItemsRendered += filteredItems.length;
+
       html += `
-        <div class="category-group" data-cat-id="${cat.id}">
+        <div class="category-group ${query ? '' : ''}" data-cat-id="${cat.id}">
           <div class="category-header">
             <div class="category-title-wrap">
               <span class="category-number-badge">${cat.id}</span>
               <span class="category-name">${escapeHtml(cat.name)}</span>
             </div>
             <div class="category-meta">
+              <button type="button" class="btn-cat-all-good" data-cat-id="${cat.id}" title="Mark all in this section as GOOD">
+                ⚡ All Good
+              </button>
               <span class="category-count-pill ${isCompleted ? 'completed' : ''}" id="cat-pill-${cat.id}">
                 ${checkedInCat}/${totalInCat}
               </span>
@@ -646,7 +679,7 @@
           <div class="category-items-list">
       `;
 
-      catItems.forEach(item => {
+      filteredItems.forEach(item => {
         const itemState = currentDraft.items[item.no] || { status: '', remark: '', tags: [], photo: null };
         const status = itemState.status || '';
         const hasRemark = itemState.remark && itemState.remark.trim().length > 0;
@@ -744,9 +777,38 @@
       `;
     });
 
+    if (totalItemsRendered === 0) {
+      html = `
+        <div class="empty-history text-center" style="padding: 36px 16px;">
+          <p class="text-muted mb-2">No checklist items match your filter criteria.</p>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-reset-checklist-filter">Show All Items</button>
+        </div>
+      `;
+    }
+
     checklistContainer.innerHTML = html;
     attachChecklistEventListeners();
     updateProgressStats();
+  }
+
+  function fillCategoryAllGood(catId) {
+    if (!template || !template.categories) return;
+    const cat = template.categories.find(c => c.id.toString() === catId.toString());
+    if (!cat) return;
+
+    let updated = 0;
+    (cat.items || []).forEach(item => {
+      if (!currentDraft.items[item.no]) {
+        currentDraft.items[item.no] = { status: '', remark: '', tags: [], photo: null };
+      }
+      currentDraft.items[item.no].status = 'GOOD';
+      updated++;
+    });
+
+    if (navigator.vibrate) navigator.vibrate([15, 30, 15]);
+    showToast(`Marked all items in "${cat.name}" as GOOD`, 'success');
+    renderChecklist();
+    saveDraftToStorage();
   }
 
   function attachChecklistEventListeners() {
@@ -756,6 +818,26 @@
         if (group) group.classList.toggle('collapsed');
       });
     });
+
+    document.querySelectorAll('.btn-cat-all-good').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const catId = btn.getAttribute('data-cat-id');
+        fillCategoryAllGood(catId);
+      });
+    });
+
+    const btnResetChecklistFilter = document.getElementById('btn-reset-checklist-filter');
+    if (btnResetChecklistFilter) {
+      btnResetChecklistFilter.addEventListener('click', () => {
+        checklistSearchQuery = '';
+        checklistViewFilter = 'ALL';
+        if (checklistSearchInput) checklistSearchInput.value = '';
+        if (btnClearChecklistSearch) btnClearChecklistSearch.style.display = 'none';
+        viewPills.forEach(p => p.classList.toggle('active', p.getAttribute('data-view-filter') === 'ALL'));
+        renderChecklist();
+      });
+    }
 
     document.querySelectorAll('.btn-rating').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -1696,6 +1778,34 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
     }
 
     if (btnQuickFillGood) btnQuickFillGood.addEventListener('click', quickFillAllGood);
+
+    if (checklistSearchInput) {
+      checklistSearchInput.addEventListener('input', (e) => {
+        checklistSearchQuery = e.target.value;
+        if (btnClearChecklistSearch) {
+          btnClearChecklistSearch.style.display = checklistSearchQuery ? 'block' : 'none';
+        }
+        renderChecklist();
+      });
+    }
+
+    if (btnClearChecklistSearch) {
+      btnClearChecklistSearch.addEventListener('click', () => {
+        if (checklistSearchInput) checklistSearchInput.value = '';
+        checklistSearchQuery = '';
+        btnClearChecklistSearch.style.display = 'none';
+        renderChecklist();
+      });
+    }
+
+    viewPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        viewPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        checklistViewFilter = pill.getAttribute('data-view-filter') || 'ALL';
+        renderChecklist();
+      });
+    });
     if (btnSaveInspection) btnSaveInspection.addEventListener('click', saveInspection);
     if (btnResetForm) btnResetForm.addEventListener('click', resetChecklistForm);
 
