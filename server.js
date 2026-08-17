@@ -855,8 +855,9 @@ app.delete('/api/feedback/:id', (req, res) => {
   res.json({ success: true, message: 'Feedback removed' });
 });
 
-// SPA wildcard fallback
-app.get('*', (req, res, next) => {
+// SPA wildcard fallback (Express 5 compatible)
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
   if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
     return next();
   }
