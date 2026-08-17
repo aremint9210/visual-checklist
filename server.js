@@ -709,11 +709,6 @@ app.get('/api/export/excel/:id', async (req, res) => {
       });
     });
 
-    // Notes footer
-        }
-      });
-    });
-
     // Notes Row at bottom
     sheet.addRow([]);
     const notesRow = sheet.addRow(['GENERAL NOTES & ACTION PLAN:', insp.generalNotes || 'None logged.', '', '', '', '']);
