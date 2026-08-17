@@ -1,5 +1,132 @@
 [
   {
+    "id": "INSP-20260817-Q75-Q56XH",
+    "equipmentId": "Q75",
+    "equipmentType": "QC",
+    "inspectorName": "Aremi / Inspector 1",
+    "inspectionDate": "2026-08-17",
+    "inspectionTime": "10:15",
+    "timestamp": "2026-08-17T16:37:56.359Z",
+    "location": "Berth 4",
+    "shift": "Morning Shift",
+    "runningHours": null,
+    "generalNotes": "Follow-up check on wire rope 2.1. Defect repaired and verified.",
+    "signature": null,
+    "summary": {
+      "totalItems": 26,
+      "goodCount": 26,
+      "satisfiedCount": 0,
+      "poorCount": 0,
+      "overallStatus": "PASSED"
+    },
+    "items": {
+      "1.1": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "1.2": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "1.3": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "1.4": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "1.5": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "1.6": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "2.1": {
+        "status": "GOOD",
+        "remark": "Rope replaced, lubrication applied."
+      },
+      "2.2": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "2.3": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "2.4": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "3.1": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "3.2": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "3.3": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "3.4": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "4.1": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "4.2": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "4.3": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "4.4": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "5.1": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "5.2": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "5.3": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "5.4": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "6.1": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "6.2": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "6.3": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "6.4": {
+        "status": "GOOD",
+        "remark": ""
+      }
+    }
+  },
+  {
     "id": "INSP-20260817-Q75-GT2Q2",
     "equipmentId": "Q75",
     "equipmentType": "QC",

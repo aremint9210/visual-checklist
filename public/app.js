@@ -492,6 +492,14 @@
       if (modalQrImg && !modalQrImg.src.includes('data:image')) modalQrImg.src = dynamicQrUrl;
       if (qrCodeImg && !qrCodeImg.src.includes('data:image')) qrCodeImg.src = dynamicQrUrl;
 
+      // Setup WhatsApp share links
+      const waShareText = `📋 Open Port Crane Visual Inspection Checklist:\n${currentOrigin}`;
+      const waShareUrl = `https://wa.me/?text=${encodeURIComponent(waShareText)}`;
+      const btnShareWa = document.getElementById('btn-share-whatsapp');
+      const btnModalShareWa = document.getElementById('btn-modal-share-wa');
+      if (btnShareWa) btnShareWa.href = waShareUrl;
+      if (btnModalShareWa) btnModalShareWa.href = waShareUrl;
+
       const res = await fetch(`/api/network-info?origin=${encodeURIComponent(currentOrigin)}`);
       if (res.ok) {
         const data = await res.json();
@@ -1769,6 +1777,16 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
       });
     }
 
+    const btnShareMobileUrl = document.getElementById('btn-share-mobile-url');
+    if (btnShareMobileUrl) {
+      btnShareMobileUrl.addEventListener('click', shareAppUrl);
+    }
+
+    const btnModalShareUrl = document.getElementById('btn-modal-share-url');
+    if (btnModalShareUrl) {
+      btnModalShareUrl.addEventListener('click', shareAppUrl);
+    }
+
     const btnBackupJson = document.getElementById('btn-backup-json');
     if (btnBackupJson) {
       btnBackupJson.addEventListener('click', () => {
@@ -1880,6 +1898,37 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
       toast.style.transition = 'all 0.2s ease';
       setTimeout(() => toast.remove(), 200);
     }, 3200);
+  }
+
+  async function shareAppUrl() {
+    const mobileUrl = window.location.origin;
+    const shareData = {
+      title: 'Visual Inspection Checklist & CBM System',
+      text: 'Open the Port Crane Visual Inspection Checklist on your phone:',
+      url: mobileUrl
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        showToast('Link shared successfully!', 'success');
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          copyToClipboard(mobileUrl);
+        }
+      }
+    } else {
+      copyToClipboard(mobileUrl);
+    }
+  }
+
+  function copyToClipboard(text) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      showToast('App link copied to clipboard! Share it with your team.', 'success');
+    } else {
+      showToast(text, 'info');
+    }
   }
 
   function escapeHtml(str) {
