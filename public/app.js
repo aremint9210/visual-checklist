@@ -1,6 +1,12 @@
 /**
- * Visual Inspection Checklist & Asset Tracking Web App
- * Mobile-First, Touch-Optimized with Offline Sync & Excel Export
+ * Visual Inspection Checklist & Condition-Based Maintenance (CBM) System
+ * Features:
+ * 1. Mobile-First Inspection Form & 1-Tap Ticking
+ * 2. Defect Lifecycle & Active Carry-Forward Issue Tracking
+ * 3. 1-Tap WhatsApp & Email Critical Alert Dispatcher
+ * 4. Voice-to-Text Speech Recognition (🎙️)
+ * 5. CBM Predictive Analytics, Failure Hotspots & Crane Reliability Ranking
+ * 6. Historical Track Back & Excel Export (.xlsx)
  */
 
 (function () {
@@ -10,6 +16,14 @@
   let template = null;
   let inspections = [];
   let fleetStats = [];
+  let alertSettings = {
+    supervisorPhone: '+60123456789',
+    supervisorEmail: 'supervisor@port.com',
+    enableWhatsAppAlerts: true,
+    enableEmailAlerts: true
+  };
+  let currentOpenDefects = [];
+
   let currentDraft = {
     equipmentId: '',
     equipmentType: 'QC',
@@ -26,7 +40,11 @@
   let historySearchQuery = '';
   let historyStatusFilter = 'ALL';
 
-  // DOM Elements
+  // Speech Recognition state
+  let recognition = null;
+  let activeSpeechTargetInput = null;
+
+  // DOM Elements - Navigation & Core Form
   const tabs = document.querySelectorAll('.nav-tab');
   const tabPanes = document.querySelectorAll('.tab-pane');
   const checklistContainer = document.getElementById('checklist-categories-container');
@@ -51,6 +69,15 @@
   const btnResetForm = document.getElementById('btn-reset-form');
   const btnClearEquipment = document.getElementById('btn-clear-equipment');
 
+  // Defect Lifecycle Banner
+  const activeDefectsBanner = document.getElementById('active-defects-banner');
+  const activeDefectsList = document.getElementById('active-defects-list');
+  const defectsBannerCount = document.getElementById('defects-banner-count');
+  const defectsBannerHeading = document.getElementById('defects-banner-heading');
+
+  // Voice Dictation
+  const btnVoiceGeneral = document.getElementById('btn-voice-dictation-general');
+
   // History Elements
   const historySearchInput = document.getElementById('history-search-input');
   const btnClearHistorySearch = document.getElementById('btn-clear-history-search');
@@ -60,6 +87,16 @@
 
   // Fleet Elements
   const fleetGridContainer = document.getElementById('fleet-grid-container');
+
+  // CBM Analytics Elements
+  const cbmFleetScore = document.getElementById('cbm-fleet-score');
+  const cbmFleetStatus = document.getElementById('cbm-fleet-status');
+  const cbmTotalDefects = document.getElementById('cbm-total-defects');
+  const cbmHotspotsContainer = document.getElementById('cbm-hotspots-container');
+  const cbmRankingContainer = document.getElementById('cbm-ranking-table-container');
+  const formAlertSettings = document.getElementById('form-alert-settings');
+  const settingPhoneInput = document.getElementById('setting-phone-input');
+  const settingEmailInput = document.getElementById('setting-email-input');
 
   // QR & Mobile Elements
   const btnPhoneQr = document.getElementById('btn-phone-qr');
@@ -81,6 +118,15 @@
   const modalBtnDownloadExcel = document.getElementById('modal-btn-download-excel');
   const modalBtnPrint = document.getElementById('modal-btn-print');
 
+  // Critical Alert Modal Elements (WhatsApp / Email)
+  const alertModal = document.getElementById('alert-modal');
+  const btnCloseAlertModal = document.getElementById('btn-close-alert-modal');
+  const btnDismissAlertModal = document.getElementById('btn-dismiss-alert-modal');
+  const alertModalEquip = document.getElementById('alert-modal-equip');
+  const alertMessagePreview = document.getElementById('alert-message-preview');
+  const btnSendWhatsApp = document.getElementById('btn-send-whatsapp');
+  const btnSendEmail = document.getElementById('btn-send-email');
+
   // Toast Container
   const toastContainer = document.getElementById('toast-container');
 
@@ -89,17 +135,74 @@
   // =========================================================================
 
   async function init() {
+    setupSpeechRecognition();
     setupTabNavigation();
     setupDefaultFormValues();
     setupEventListeners();
     await loadChecklistTemplate();
     await loadInspections();
     await loadFleetStats();
+    await loadAlertSettings();
     await loadNetworkInfo();
     restoreDraftFromStorage();
   }
 
-  // Set default inspector, date, time
+  // Setup Web Speech API for voice dictation
+  function setupSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (activeSpeechTargetInput) {
+          const currentVal = activeSpeechTargetInput.value.trim();
+          activeSpeechTargetInput.value = currentVal ? `${currentVal}. ${transcript}` : transcript;
+          activeSpeechTargetInput.dispatchEvent(new Event('input', { bubbles: true }));
+          showToast(`Transcribed: "${transcript}"`, 'success');
+        }
+        stopListening();
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        showToast(`Voice error: ${event.error}`, 'error');
+        stopListening();
+      };
+
+      recognition.onend = () => {
+        stopListening();
+      };
+    } else {
+      if (btnVoiceGeneral) {
+        btnVoiceGeneral.title = 'Speech-to-text not supported in this browser';
+      }
+    }
+  }
+
+  function startListening(targetInput, triggerBtn) {
+    if (!recognition) {
+      showToast('Speech recognition is not supported on this browser (Try Chrome or Safari)', 'info');
+      return;
+    }
+    activeSpeechTargetInput = targetInput;
+    if (triggerBtn) triggerBtn.classList.add('listening');
+    try {
+      recognition.start();
+      showToast('🎙️ Listening... speak now', 'info');
+    } catch (e) {
+      console.warn('Recognition already started');
+    }
+  }
+
+  function stopListening() {
+    document.querySelectorAll('.listening').forEach(el => el.classList.remove('listening'));
+    activeSpeechTargetInput = null;
+  }
+
   function setupDefaultFormValues() {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -117,7 +220,6 @@
     }
   }
 
-  // Tab Navigation Handling
   function setupTabNavigation() {
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
@@ -145,11 +247,12 @@
       }
     });
 
-    // Refresh views if needed
     if (tabId === 'history-tab') {
       renderHistoryList();
     } else if (tabId === 'fleet-tab') {
       loadFleetStats();
+    } else if (tabId === 'cbm-tab') {
+      loadCBMAnalytics();
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -190,6 +293,117 @@
     }
   }
 
+  async function loadAlertSettings() {
+    try {
+      const res = await fetch('/api/settings/alerts');
+      alertSettings = await res.json();
+      if (settingPhoneInput) settingPhoneInput.value = alertSettings.supervisorPhone || '';
+      if (settingEmailInput) settingEmailInput.value = alertSettings.supervisorEmail || '';
+    } catch (e) {
+      console.error('Failed to load alert settings:', e);
+    }
+  }
+
+  async function loadCBMAnalytics() {
+    try {
+      const res = await fetch('/api/analytics/cbm-summary');
+      const data = await res.json();
+
+      // Update KPI Cards
+      if (cbmFleetScore) cbmFleetScore.textContent = `${data.fleetHealthScore}%`;
+      if (cbmFleetStatus) {
+        if (data.fleetHealthScore >= 90) {
+          cbmFleetStatus.className = 'kpi-badge badge-good';
+          cbmFleetStatus.textContent = 'EXCELLENT';
+        } else if (data.fleetHealthScore >= 75) {
+          cbmFleetStatus.className = 'kpi-badge badge-satisfied';
+          cbmFleetStatus.textContent = 'GOOD';
+        } else {
+          cbmFleetStatus.className = 'kpi-badge badge-poor';
+          cbmFleetStatus.textContent = 'ATTENTION NEEDED';
+        }
+      }
+      if (cbmTotalDefects) cbmTotalDefects.textContent = data.totalPoor + data.totalSatisfied;
+
+      // Render Failure Hotspots
+      if (cbmHotspotsContainer) {
+        if (!data.topHotspots || data.topHotspots.length === 0) {
+          cbmHotspotsContainer.innerHTML = `<p class="text-muted text-center" style="padding: 20px;">No recurring defects recorded yet.</p>`;
+        } else {
+          const maxIncidents = Math.max(...data.topHotspots.map(h => h.totalIncidents), 1);
+          let hotHtml = '';
+          data.topHotspots.forEach(h => {
+            const barWidth = Math.round((h.totalIncidents / maxIncidents) * 100);
+            hotHtml += `
+              <div class="hotspot-item">
+                <div class="hotspot-top">
+                  <div>
+                    <span class="hotspot-title">${h.itemNo} ${escapeHtml(h.description)}</span>
+                    <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(h.category)}</div>
+                  </div>
+                  <span class="hotspot-incidents">${h.totalIncidents} Incident(s)</span>
+                </div>
+                <div class="hotspot-bar-track">
+                  <div class="hotspot-bar-fill" style="width: ${barWidth}%;"></div>
+                </div>
+                <div style="font-size: 11px; color: var(--text-secondary); display: flex; justify-content: space-between;">
+                  <span>🔴 ${h.poorCount} Poor</span>
+                  <span>🟡 ${h.satisfiedCount} Satisfied</span>
+                </div>
+              </div>
+            `;
+          });
+          cbmHotspotsContainer.innerHTML = hotHtml;
+        }
+      }
+
+      // Render Crane Reliability Rankings Table
+      if (cbmRankingContainer) {
+        if (!data.equipmentRankings || data.equipmentRankings.length === 0) {
+          cbmRankingContainer.innerHTML = `<p class="text-muted text-center" style="padding: 20px;">No crane ranking data yet.</p>`;
+        } else {
+          let rankHtml = `
+            <table class="ranking-table">
+              <thead>
+                <tr>
+                  <th>Equipment ID</th>
+                  <th>Type</th>
+                  <th>Inspections</th>
+                  <th>Reliability</th>
+                  <th>Condition</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+
+          data.equipmentRankings.forEach(eq => {
+            let statusBadge = `<span class="stat-badge badge-good">HEALTHY</span>`;
+            if (eq.status === 'ATTENTION_NEEDED') {
+              statusBadge = `<span class="stat-badge badge-poor">DEFECT LOGGED</span>`;
+            } else if (eq.status === 'GOOD') {
+              statusBadge = `<span class="stat-badge badge-satisfied">MONITORING</span>`;
+            }
+
+            rankHtml += `
+              <tr>
+                <td><strong class="font-mono">${escapeHtml(eq.equipmentId)}</strong></td>
+                <td><span style="color: var(--text-muted);">${escapeHtml(eq.equipmentType)}</span></td>
+                <td>${eq.inspectionsCount}</td>
+                <td><strong style="color: ${eq.reliabilityScore >= 90 ? 'var(--color-good)' : eq.reliabilityScore >= 75 ? 'var(--color-satisfied)' : 'var(--color-poor)'}">${eq.reliabilityScore}%</strong></td>
+                <td>${statusBadge}</td>
+              </tr>
+            `;
+          });
+
+          rankHtml += `</tbody></table>`;
+          cbmRankingContainer.innerHTML = rankHtml;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load CBM analytics:', e);
+    }
+  }
+
   async function loadNetworkInfo() {
     try {
       const currentOrigin = window.location.origin;
@@ -208,6 +422,90 @@
   }
 
   // =========================================================================
+  // DEFECT LIFECYCLE: CARRY FORWARD & RESOLUTION TRACKING
+  // =========================================================================
+
+  async function checkEquipmentOpenDefects(equipId) {
+    if (!equipId) {
+      activeDefectsBanner.style.display = 'none';
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/equipment/${encodeURIComponent(equipId)}/open-defects`);
+      const data = await res.json();
+      currentOpenDefects = data.openDefects || [];
+
+      if (currentOpenDefects.length > 0) {
+        defectsBannerHeading.textContent = `Active Issues on ${equipId} from ${data.lastInspectionDate}`;
+        defectsBannerCount.textContent = `${currentOpenDefects.length} Issue(s)`;
+
+        let defHtml = '';
+        currentOpenDefects.forEach(defect => {
+          defHtml += `
+            <div class="active-defect-item">
+              <div class="defect-item-top">
+                <div>
+                  <span class="defect-item-no">${defect.itemNo}</span>
+                  <span class="defect-item-desc">${escapeHtml(defect.description)}</span>
+                </div>
+                <span class="stat-badge ${defect.status === 'POOR' ? 'badge-poor' : 'badge-satisfied'}">${defect.status}</span>
+              </div>
+
+              ${defect.remark ? `
+                <div class="defect-item-remark">
+                  💬 Previous Note: <em>"${escapeHtml(defect.remark)}"</em> (by ${escapeHtml(defect.reportedBy || 'Inspector')})
+                </div>
+              ` : ''}
+
+              <div class="defect-item-actions">
+                <button type="button" class="btn btn-emerald btn-sm btn-rectify-defect" data-item-no="${defect.itemNo}">
+                  ✅ Mark as Rectified / Repaired
+                </button>
+              </div>
+            </div>
+          `;
+        });
+
+        activeDefectsList.innerHTML = defHtml;
+        activeDefectsBanner.style.display = 'block';
+
+        // Attach Rectify Listeners
+        document.querySelectorAll('.btn-rectify-defect').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const itemNo = btn.getAttribute('data-item-no');
+            rectifyDefect(itemNo);
+          });
+        });
+      } else {
+        activeDefectsBanner.style.display = 'none';
+      }
+    } catch (e) {
+      console.error('Failed to check open defects:', e);
+      activeDefectsBanner.style.display = 'none';
+    }
+  }
+
+  function rectifyDefect(itemNo) {
+    // Set item rating to GOOD
+    if (!currentDraft.items[itemNo]) {
+      currentDraft.items[itemNo] = { status: '', remark: '', tags: [], photo: null };
+    }
+    currentDraft.items[itemNo].status = 'GOOD';
+    currentDraft.items[itemNo].remark = `Rectified on ${new Date().toISOString().split('T')[0]}: Verified in good working condition.`;
+
+    showToast(`Marked Item ${itemNo} as RECTIFIED!`, 'success');
+    renderChecklist();
+    saveDraftToStorage();
+
+    // Scroll to item
+    const card = document.getElementById(`item-card-${itemNo.replace('.', '_')}`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  // =========================================================================
   // CHECKLIST RENDERING & TICKING LOGIC
   // =========================================================================
 
@@ -219,8 +517,7 @@
     template.categories.forEach(cat => {
       const catItems = cat.items || [];
       const totalInCat = catItems.length;
-      
-      // Calculate how many checked in this category
+
       let checkedInCat = 0;
       catItems.forEach(item => {
         if (currentDraft.items[item.no] && currentDraft.items[item.no].status) {
@@ -296,7 +593,7 @@
               </button>
             </div>
 
-            <!-- Item Remark & Defect Tags Drawer -->
+            <!-- Item Remark, Voice Mic & Defect Tags Drawer -->
             <div class="item-expand-details" id="expand-${item.no.replace('.', '_')}" style="display: ${showExpand ? 'flex' : 'none'};">
               ${item.defectTags && item.defectTags.length > 0 ? `
                 <div class="defect-tags-row">
@@ -315,6 +612,14 @@
                   placeholder="Remark / Defect details..." 
                   data-item-no="${item.no}"
                   value="${escapeHtml(itemState.remark || '')}">
+
+                <!-- Voice Mic for item remark -->
+                <button type="button" class="btn-mic-inline btn-voice-item" data-item-no="${item.no}" title="Speak Remark">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 01-14 0v-2"></path>
+                  </svg>
+                </button>
 
                 <label class="btn-photo-upload ${itemState.photo ? 'has-photo' : ''}" title="Attach Photo">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -349,7 +654,6 @@
   }
 
   function attachChecklistEventListeners() {
-    // Accordion Toggle
     document.querySelectorAll('.category-header').forEach(header => {
       header.addEventListener('click', () => {
         const group = header.closest('.category-group');
@@ -357,7 +661,6 @@
       });
     });
 
-    // Rating Buttons
     document.querySelectorAll('.btn-rating').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -367,7 +670,6 @@
       });
     });
 
-    // Defect Tags
     document.querySelectorAll('.tag-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -377,7 +679,6 @@
       });
     });
 
-    // Remark inputs
     document.querySelectorAll('.item-remark-input').forEach(input => {
       input.addEventListener('input', () => {
         const itemNo = input.getAttribute('data-item-no');
@@ -387,7 +688,17 @@
       });
     });
 
-    // Photo inputs
+    // Voice Dictation for item remarks
+    document.querySelectorAll('.btn-voice-item').forEach(micBtn => {
+      micBtn.addEventListener('click', () => {
+        const itemNo = micBtn.getAttribute('data-item-no');
+        const input = document.getElementById(`remark-input-${itemNo.replace('.', '_')}`);
+        if (input) {
+          startListening(input, micBtn);
+        }
+      });
+    });
+
     document.querySelectorAll('.item-photo-file-input').forEach(fileInput => {
       fileInput.addEventListener('change', async () => {
         const itemNo = fileInput.getAttribute('data-item-no');
@@ -398,7 +709,6 @@
       });
     });
 
-    // Photo Remove
     document.querySelectorAll('.btn-remove-photo').forEach(btn => {
       btn.addEventListener('click', () => {
         const itemNo = btn.getAttribute('data-item-no');
@@ -411,7 +721,6 @@
     });
   }
 
-  // Rating Ticking Handler
   function setItemRating(itemNo, rating) {
     if (!currentDraft.items[itemNo]) {
       currentDraft.items[itemNo] = { status: '', remark: '', tags: [], photo: null };
@@ -420,18 +729,15 @@
     const card = document.getElementById(`item-card-${itemNo.replace('.', '_')}`);
     const expandDiv = document.getElementById(`expand-${itemNo.replace('.', '_')}`);
 
-    // If clicking same active rating, toggle it off
     if (currentDraft.items[itemNo].status === rating) {
       currentDraft.items[itemNo].status = '';
     } else {
       currentDraft.items[itemNo].status = rating;
-      // Light haptic vibration on phone
       if (navigator.vibrate) navigator.vibrate(15);
     }
 
     const currentStatus = currentDraft.items[itemNo].status;
 
-    // Update UI buttons
     card.querySelectorAll('.btn-rating').forEach(b => {
       if (b.getAttribute('data-rating') === currentStatus) {
         b.classList.add('active');
@@ -440,10 +746,8 @@
       }
     });
 
-    // Update Card Class
     card.className = `checklist-item-card ${currentStatus ? 'status-' + currentStatus.toLowerCase() : ''}`;
 
-    // Auto-open remark/tag drawer if SATISFIED or POOR
     if (currentStatus === 'SATISFIED' || currentStatus === 'POOR') {
       expandDiv.style.display = 'flex';
     } else if (!currentDraft.items[itemNo].remark && !currentDraft.items[itemNo].photo) {
@@ -455,7 +759,6 @@
     saveDraftToStorage();
   }
 
-  // Toggle Defect Tag
   function toggleDefectTag(itemNo, tag) {
     if (!currentDraft.items[itemNo]) {
       currentDraft.items[itemNo] = { status: '', remark: '', tags: [], photo: null };
@@ -468,7 +771,6 @@
       itemObj.tags.splice(index, 1);
     } else {
       itemObj.tags.push(tag);
-      // Also append to remark if not present
       if (!itemObj.remark || !itemObj.remark.includes(tag)) {
         itemObj.remark = itemObj.remark ? `${itemObj.remark}, ${tag}` : tag;
         const remarkInput = document.getElementById(`remark-input-${itemNo.replace('.', '_')}`);
@@ -480,7 +782,6 @@
     renderChecklist();
   }
 
-  // Handle Photo Upload
   async function handlePhotoUpload(itemNo, file) {
     showToast('Uploading photo...', 'info');
     try {
@@ -509,7 +810,6 @@
     }
   }
 
-  // Update Category Badge
   function updateCategoryPill(itemNo) {
     if (!template) return;
     const catId = itemNo.split('.')[0];
@@ -534,14 +834,12 @@
     }
   }
 
-  // Quick Action: "Mark All as GOOD"
   function quickFillAllGood() {
     if (!template || !template.categories) return;
 
     let updatedCount = 0;
     template.categories.forEach(cat => {
       cat.items.forEach(item => {
-        // If not already set, or mark all
         if (!currentDraft.items[item.no] || !currentDraft.items[item.no].status) {
           currentDraft.items[item.no] = {
             status: 'GOOD',
@@ -560,7 +858,6 @@
     saveDraftToStorage();
   }
 
-  // Update Progress Statistics
   function updateProgressStats() {
     if (!template) return;
 
@@ -601,7 +898,7 @@
   }
 
   // =========================================================================
-  // FORM PERSISTENCE & SUBMISSION
+  // FORM PERSISTENCE & SUBMISSION WITH 1-TAP CRITICAL ALERTS
   // =========================================================================
 
   function saveDraftToStorage() {
@@ -627,7 +924,10 @@
         const parsed = JSON.parse(saved);
         currentDraft = { ...currentDraft, ...parsed };
 
-        if (currentDraft.equipmentId) equipmentInput.value = currentDraft.equipmentId;
+        if (currentDraft.equipmentId) {
+          equipmentInput.value = currentDraft.equipmentId;
+          checkEquipmentOpenDefects(currentDraft.equipmentId);
+        }
         if (currentDraft.equipmentType) equipmentTypeSelect.value = currentDraft.equipmentType;
         if (currentDraft.inspectorName) inspectorInput.value = currentDraft.inspectorName;
         if (currentDraft.location) locationInput.value = currentDraft.location;
@@ -670,11 +970,10 @@
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) {
-        throw new Error('Server error while saving inspection');
-      }
-
+      if (!res.ok) throw new Error('Server error while saving inspection');
       const result = await res.json();
+      const savedInsp = result.inspection;
+
       showToast(`Inspection saved for ${equipId}!`, 'success');
 
       // Clear draft
@@ -683,21 +982,25 @@
       currentDraft.generalNotes = '';
       notesInput.value = '';
 
-      // Reload inspections & fleet stats
+      // Reload inspections & stats
       await loadInspections();
       await loadFleetStats();
 
-      // Switch to history tab and search for this equipment to show instant result!
-      historySearchInput.value = equipId;
-      historySearchQuery = equipId;
-      renderHistoryList();
-      switchTab('history-tab');
+      // Check if critical defects were found: Trigger 1-Tap Alert Modal!
+      if (savedInsp.summary && (savedInsp.summary.poorCount > 0 || savedInsp.summary.satisfiedCount > 0)) {
+        triggerCriticalAlertModal(savedInsp);
+      } else {
+        // Switch to history tab
+        historySearchInput.value = equipId;
+        historySearchQuery = equipId;
+        renderHistoryList();
+        switchTab('history-tab');
+      }
 
-      // Reset form
       renderChecklist();
     } catch (err) {
       console.error('Error saving inspection:', err);
-      showToast('Network error: Inspection saved locally in cache', 'error');
+      showToast('Inspection saved locally', 'info');
     } finally {
       btnSaveInspection.disabled = false;
       btnSaveInspection.innerHTML = `
@@ -709,6 +1012,50 @@
         <span>Save Inspection</span>
       `;
     }
+  }
+
+  // Trigger 1-Tap WhatsApp & Email Modal
+  function triggerCriticalAlertModal(insp) {
+    alertModalEquip.textContent = insp.equipmentId;
+
+    // Collect defect list
+    const defectLines = [];
+    if (insp.items) {
+      for (const [no, item] of Object.entries(insp.items)) {
+        if (item.status === 'POOR' || item.status === 'SATISFIED') {
+          defectLines.push(`• Item ${no} [${item.status}]: ${item.remark || 'Flagged for attention'}`);
+        }
+      }
+    }
+
+    const alertText = 
+`🚨 CRITICAL DEFECT ALERT - PORT INSPECTION
+Equipment: ${insp.equipmentId} (${insp.equipmentType})
+Date: ${insp.inspectionDate} ${insp.inspectionTime || ''}
+Inspector: ${insp.inspectorName}
+Location: ${insp.location || 'Port Yard'} (${insp.shift || 'Shift'})
+
+ATTENTION ITEMS FLAGGED:
+${defectLines.join('\n')}
+
+Action Plan / Notes:
+${insp.generalNotes || 'Immediate maintenance review requested.'}
+
+🌐 View Full Report: ${window.location.origin}`;
+
+    alertMessagePreview.textContent = alertText;
+
+    // Build WhatsApp URL
+    const cleanPhone = (alertSettings.supervisorPhone || '').replace(/[^0-9+]/g, '');
+    const waUrl = `https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(alertText)}`;
+    btnSendWhatsApp.href = waUrl;
+
+    // Build Email URL
+    const mailSubject = `🚨 CRITICAL DEFECT ALERT: ${insp.equipmentId} (${insp.inspectionDate})`;
+    const mailUrl = `mailto:${alertSettings.supervisorEmail || 'supervisor@port.com'}?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(alertText)}`;
+    btnSendEmail.href = mailUrl;
+
+    alertModal.classList.add('open');
   }
 
   function resetChecklistForm() {
@@ -731,7 +1078,6 @@
 
     let filtered = [...inspections];
 
-    // Filter by Search Query
     if (historySearchQuery) {
       const q = historySearchQuery.trim().toUpperCase();
       filtered = filtered.filter(item =>
@@ -741,7 +1087,6 @@
       );
     }
 
-    // Filter by Status
     if (historyStatusFilter !== 'ALL') {
       filtered = filtered.filter(item => item.summary?.overallStatus === historyStatusFilter);
     }
@@ -776,7 +1121,6 @@
         statusLabel = `🟡 NOTES / SATISFIED (${insp.summary?.satisfiedCount || 0})`;
       }
 
-      // Collect issues
       const defects = [];
       if (insp.items) {
         for (const [no, item] of Object.entries(insp.items)) {
@@ -874,7 +1218,6 @@
 
     historyListContainer.innerHTML = html;
 
-    // Attach view report listeners
     document.querySelectorAll('.btn-view-report').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
@@ -883,7 +1226,6 @@
     });
   }
 
-  // Open Inspection Detail Modal
   function openDetailModal(id) {
     const insp = inspections.find(item => item.id === id);
     if (!insp || !template) return;
@@ -982,7 +1324,6 @@
 
     let html = '';
     fleetStats.forEach(eq => {
-      const hasDefects = eq.lastStatus === 'ATTENTION_REQUIRED' || eq.poorCountTotal > 0;
       let statusColor = 'var(--color-good)';
       let statusText = 'HEALTHY';
       if (eq.lastStatus === 'ATTENTION_REQUIRED') {
@@ -1025,7 +1366,6 @@
 
     fleetGridContainer.innerHTML = html;
 
-    // Fleet card inspect / history buttons
     document.querySelectorAll('.btn-inspect-equip').forEach(btn => {
       btn.addEventListener('click', () => {
         const equip = btn.getAttribute('data-equip');
@@ -1051,7 +1391,6 @@
   // =========================================================================
 
   function setupEventListeners() {
-    // Quick Equipment Chips
     document.querySelectorAll('.chip-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const equip = btn.getAttribute('data-equip');
@@ -1060,35 +1399,36 @@
       });
     });
 
-    // Clear Equipment Button
     btnClearEquipment.addEventListener('click', () => {
       equipmentInput.value = '';
       equipmentInput.focus();
       highlightMatchingEquipmentChip('');
+      activeDefectsBanner.style.display = 'none';
       saveDraftToStorage();
     });
 
-    // Equipment input change
     equipmentInput.addEventListener('input', () => {
-      highlightMatchingEquipmentChip(equipmentInput.value.trim().toUpperCase());
+      const val = equipmentInput.value.trim().toUpperCase();
+      highlightMatchingEquipmentChip(val);
+      checkEquipmentOpenDefects(val);
       saveDraftToStorage();
     });
 
-    // Form field auto-save
     [inspectorInput, dateInput, timeInput, locationInput, shiftSelect, equipmentTypeSelect, notesInput].forEach(elem => {
       elem.addEventListener('change', saveDraftToStorage);
     });
 
-    // Mark All Good
+    // Voice Dictation for General Notes
+    if (btnVoiceGeneral) {
+      btnVoiceGeneral.addEventListener('click', () => {
+        startListening(notesInput, btnVoiceGeneral);
+      });
+    }
+
     btnQuickFillGood.addEventListener('click', quickFillAllGood);
-
-    // Save Inspection
     btnSaveInspection.addEventListener('click', saveInspection);
-
-    // Reset Form
     btnResetForm.addEventListener('click', resetChecklistForm);
 
-    // Search History
     historySearchInput.addEventListener('input', (e) => {
       historySearchQuery = e.target.value;
       renderHistoryList();
@@ -1100,7 +1440,6 @@
       renderHistoryList();
     });
 
-    // History Filter Pills
     filterPills.forEach(pill => {
       pill.addEventListener('click', () => {
         filterPills.forEach(p => p.classList.remove('active'));
@@ -1110,26 +1449,60 @@
       });
     });
 
-    // Phone QR Modal
-    btnPhoneQr.addEventListener('click', () => {
-      qrModal.classList.add('open');
-    });
+    // Alert Settings Form
+    if (formAlertSettings) {
+      formAlertSettings.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newSettings = {
+          supervisorPhone: settingPhoneInput.value.trim(),
+          supervisorEmail: settingEmailInput.value.trim(),
+          enableWhatsAppAlerts: true,
+          enableEmailAlerts: true
+        };
 
+        try {
+          const res = await fetch('/api/settings/alerts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newSettings)
+          });
+          if (res.ok) {
+            alertSettings = newSettings;
+            showToast('Alert settings saved successfully!', 'success');
+          }
+        } catch (err) {
+          showToast('Failed to save settings', 'error');
+        }
+      });
+    }
+
+    // Modal Close buttons
+    btnPhoneQr.addEventListener('click', () => qrModal.classList.add('open'));
     btnCloseQrModal.addEventListener('click', () => qrModal.classList.remove('open'));
     btnCloseQrFooter.addEventListener('click', () => qrModal.classList.remove('open'));
 
-    // Detail Modal Close
     btnCloseDetailModal.addEventListener('click', () => detailModal.classList.remove('open'));
     modalBtnPrint.addEventListener('click', () => window.print());
 
-    // Copy Mobile URL
+    // Alert Modal Buttons
+    if (btnCloseAlertModal) btnCloseAlertModal.addEventListener('click', () => alertModal.classList.remove('open'));
+    if (btnDismissAlertModal) {
+      btnDismissAlertModal.addEventListener('click', () => {
+        alertModal.classList.remove('open');
+        // Switch to history tab
+        historySearchInput.value = equipmentInput.value.trim().toUpperCase();
+        historySearchQuery = historySearchInput.value;
+        renderHistoryList();
+        switchTab('history-tab');
+      });
+    }
+
     btnCopyMobileUrl.addEventListener('click', () => {
       mobileUrlInput.select();
       navigator.clipboard.writeText(mobileUrlInput.value);
       showToast('Mobile URL copied to clipboard!', 'success');
     });
 
-    // JSON Backup download
     const btnBackupJson = document.getElementById('btn-backup-json');
     if (btnBackupJson) {
       btnBackupJson.addEventListener('click', () => {
@@ -1144,11 +1517,12 @@
       });
     }
 
-    // Modal background click to close
-    [qrModal, detailModal].forEach(modal => {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('open');
-      });
+    [qrModal, detailModal, alertModal].forEach(modal => {
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) modal.classList.remove('open');
+        });
+      }
     });
   }
 
@@ -1156,6 +1530,7 @@
     equipmentInput.value = equip;
     if (type) equipmentTypeSelect.value = type;
     highlightMatchingEquipmentChip(equip);
+    checkEquipmentOpenDefects(equip);
     saveDraftToStorage();
     if (navigator.vibrate) navigator.vibrate(10);
   }
@@ -1170,7 +1545,6 @@
     });
   }
 
-  // Toast Notification
   function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -1199,6 +1573,5 @@
       .replace(/'/g, '&#039;');
   }
 
-  // Start app on DOMContentLoaded
   document.addEventListener('DOMContentLoaded', init);
 })();

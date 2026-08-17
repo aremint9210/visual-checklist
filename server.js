@@ -379,6 +379,191 @@ app.get('/api/equipment/stats', (req, res) => {
   res.json(equipmentList);
 });
 
+// 9.1 Open / Unresolved Defects for Equipment (Defect Lifecycle)
+app.get('/api/equipment/:id/open-defects', (req, res) => {
+  const targetId = req.params.id.trim().toUpperCase();
+  const inspections = readJSON(INSPECTIONS_FILE, []);
+  const template = readJSON(TEMPLATE_FILE, { categories: [] });
+
+  // Map item descriptions
+  const itemMap = {};
+  template.categories.forEach(c => {
+    c.items.forEach(it => {
+      itemMap[it.no] = it.description;
+    });
+  });
+
+  // Get chronological inspections for this equipment (newest first)
+  const equipInspections = inspections
+    .filter(insp => insp.equipmentId && insp.equipmentId.toUpperCase() === targetId)
+    .sort((a, b) => new Date(b.timestamp || b.inspectionDate) - new Date(a.timestamp || a.inspectionDate));
+
+  if (equipInspections.length === 0) {
+    return res.json({ equipmentId: targetId, openDefects: [], resolvedDefects: [] });
+  }
+
+  // Find defects in most recent inspections
+  const latest = equipInspections[0];
+  const openDefects = [];
+  const resolvedDefects = [];
+
+  if (latest.items) {
+    for (const [itemNo, item] of Object.entries(latest.items)) {
+      if (item.status === 'POOR' || item.status === 'SATISFIED') {
+        openDefects.push({
+          itemNo,
+          description: itemMap[itemNo] || `Item ${itemNo}`,
+          status: item.status,
+          remark: item.remark || '',
+          tags: item.tags || [],
+          photo: item.photo || null,
+          reportedDate: latest.inspectionDate,
+          reportedBy: latest.inspectorName,
+          inspectionId: latest.id
+        });
+      } else if (item.status === 'GOOD' && equipInspections.length > 1) {
+        // Check if previously poor/satisfied in older inspection
+        const prev = equipInspections[1];
+        if (prev.items && prev.items[itemNo] && (prev.items[itemNo].status === 'POOR' || prev.items[itemNo].status === 'SATISFIED')) {
+          resolvedDefects.push({
+            itemNo,
+            description: itemMap[itemNo] || `Item ${itemNo}`,
+            previousStatus: prev.items[itemNo].status,
+            previousRemark: prev.items[itemNo].remark,
+            resolvedDate: latest.inspectionDate,
+            resolvedBy: latest.inspectorName,
+            resolutionNote: item.remark || 'Marked GOOD in latest inspection'
+          });
+        }
+      }
+    }
+  }
+
+  res.json({
+    equipmentId: targetId,
+    lastInspectionDate: latest.inspectionDate,
+    lastInspector: latest.inspectorName,
+    openDefects,
+    resolvedDefects
+  });
+});
+
+// 9.2 CBM Reliability & Component Hotspots Analytics
+app.get('/api/analytics/cbm-summary', (req, res) => {
+  const inspections = readJSON(INSPECTIONS_FILE, []);
+  const template = readJSON(TEMPLATE_FILE, { categories: [] });
+
+  const itemMap = {};
+  template.categories.forEach(c => {
+    c.items.forEach(it => {
+      itemMap[it.no] = { description: it.description, category: c.name, categoryId: c.id };
+    });
+  });
+
+  const totalInspections = inspections.length;
+  let totalGood = 0;
+  let totalSatisfied = 0;
+  let totalPoor = 0;
+  const hotspotMap = {};
+  const equipHealthMap = {};
+
+  inspections.forEach(insp => {
+    const eq = insp.equipmentId || 'UNKNOWN';
+    if (!equipHealthMap[eq]) {
+      equipHealthMap[eq] = {
+        equipmentId: eq,
+        equipmentType: insp.equipmentType || 'QC',
+        inspectionsCount: 0,
+        passCount: 0,
+        defectCount: 0
+      };
+    }
+
+    equipHealthMap[eq].inspectionsCount++;
+    if (insp.summary?.poorCount > 0) {
+      equipHealthMap[eq].defectCount++;
+    } else {
+      equipHealthMap[eq].passCount++;
+    }
+
+    if (insp.summary) {
+      totalGood += (insp.summary.goodCount || 0);
+      totalSatisfied += (insp.summary.satisfiedCount || 0);
+      totalPoor += (insp.summary.poorCount || 0);
+    }
+
+    if (insp.items) {
+      for (const [no, item] of Object.entries(insp.items)) {
+        if (item.status === 'POOR' || item.status === 'SATISFIED') {
+          if (!hotspotMap[no]) {
+            hotspotMap[no] = {
+              itemNo: no,
+              description: itemMap[no]?.description || `Item ${no}`,
+              category: itemMap[no]?.category || 'General',
+              poorCount: 0,
+              satisfiedCount: 0,
+              totalIncidents: 0
+            };
+          }
+          hotspotMap[no].totalIncidents++;
+          if (item.status === 'POOR') hotspotMap[no].poorCount++;
+          else hotspotMap[no].satisfiedCount++;
+        }
+      }
+    }
+  });
+
+  // Top Defect Hotspots sorted descending
+  const topHotspots = Object.values(hotspotMap).sort((a, b) => b.totalIncidents - a.totalIncidents).slice(0, 8);
+
+  // Equipment Reliability Ranking
+  const equipmentRankings = Object.values(equipHealthMap).map(eq => {
+    const score = eq.inspectionsCount > 0 ? Math.round((eq.passCount / eq.inspectionsCount) * 100) : 100;
+    return {
+      ...eq,
+      reliabilityScore: score,
+      status: score >= 90 ? 'EXCELLENT' : score >= 75 ? 'GOOD' : 'ATTENTION_NEEDED'
+    };
+  }).sort((a, b) => b.reliabilityScore - a.reliabilityScore);
+
+  const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
+  const alertSettings = readJSON(SETTINGS_FILE, {
+    supervisorPhone: '+60123456789',
+    supervisorEmail: 'supervisor@port.com',
+    enableWhatsAppAlerts: true,
+    enableEmailAlerts: true
+  });
+
+  res.json({
+    totalInspections,
+    totalGood,
+    totalSatisfied,
+    totalPoor,
+    fleetHealthScore: totalInspections > 0 ? Math.round(((totalGood) / (totalGood + totalSatisfied + totalPoor || 1)) * 100) : 100,
+    topHotspots,
+    equipmentRankings,
+    alertSettings
+  });
+});
+
+// 9.3 Save / Get Alert Settings
+const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
+app.get('/api/settings/alerts', (req, res) => {
+  const settings = readJSON(SETTINGS_FILE, {
+    supervisorPhone: '+60123456789',
+    supervisorEmail: 'supervisor@port.com',
+    enableWhatsAppAlerts: true,
+    enableEmailAlerts: true
+  });
+  res.json(settings);
+});
+
+app.post('/api/settings/alerts', (req, res) => {
+  const data = req.body || {};
+  writeJSON(SETTINGS_FILE, data);
+  res.json({ success: true, message: 'Settings saved', settings: data });
+});
+
 // 10. Track Back History for Single Equipment (e.g. Q75)
 app.get('/api/equipment/:id/history', (req, res) => {
   const targetId = req.params.id.trim().toUpperCase();

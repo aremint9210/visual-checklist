@@ -1508,3 +1508,377 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ==========================================================================
+   FEATURE 1: DEFECT LIFECYCLE & ACTIVE DEFECTS BANNER
+   ========================================================================== */
+
+.active-defects-card {
+  border-color: var(--color-poor-border);
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, var(--bg-surface) 100%);
+  margin-bottom: 16px;
+  animation: pulseSubtle 3s infinite alternate;
+}
+
+@keyframes pulseSubtle {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.2); }
+  100% { box-shadow: 0 0 16px 2px rgba(239, 68, 68, 0.15); }
+}
+
+.defects-banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.defects-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-poor);
+}
+
+.defects-count-tag {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-poor);
+  color: #ffffff;
+}
+
+.defects-banner-subtext {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.active-defects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.active-defect-item {
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.defect-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.defect-item-no {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: var(--color-poor);
+}
+
+.defect-item-desc {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.defect-item-remark {
+  font-size: 12px;
+  color: var(--color-satisfied);
+  background-color: rgba(245, 158, 11, 0.08);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-satisfied);
+}
+
+.defect-item-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* ==========================================================================
+   FEATURE 4: VOICE-TO-TEXT DICTATION (SPEECH-TO-TEXT)
+   ========================================================================== */
+
+.notes-header-flex {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.btn-voice-mic {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-voice-mic:hover {
+  background-color: var(--bg-surface-hover);
+  border-color: var(--color-primary);
+}
+
+.btn-voice-mic.listening {
+  background-color: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+  animation: micPulse 1.2s infinite;
+}
+
+@keyframes micPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.btn-mic-inline {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.btn-mic-inline:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-mic-inline.listening {
+  background-color: var(--color-poor);
+  border-color: var(--color-poor);
+  color: #ffffff;
+  animation: micPulse 1.2s infinite;
+}
+
+/* ==========================================================================
+   FEATURE 2: CRITICAL ALERTS & WHATSAPP MODAL
+   ========================================================================== */
+
+.alert-header {
+  background: linear-gradient(135deg, #7f1d1d, #450a0a);
+}
+
+.alert-icon-pulse {
+  font-size: 20px;
+  animation: alertIconShake 1.5s infinite;
+}
+
+@keyframes alertIconShake {
+  0%, 100% { transform: rotate(0deg); }
+  20%, 60% { transform: rotate(-10deg); }
+  40%, 80% { transform: rotate(10deg); }
+}
+
+.alert-preview-box {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.alert-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 600px) {
+  .alert-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.btn-whatsapp {
+  background-color: #25D366;
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(37, 211, 102, 0.35);
+}
+
+.btn-whatsapp:hover {
+  background-color: #1ebc57;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   FEATURE 4: CBM RELIABILITY ANALYTICS & DASHBOARD
+   ========================================================================== */
+
+.cbm-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 600px) {
+  .cbm-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.kpi-card {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kpi-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.kpi-number {
+  font-size: 32px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.kpi-number.text-poor {
+  color: var(--color-poor);
+}
+
+.kpi-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+
+.kpi-subtext {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Hotspots List */
+.hotspots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.hotspot-item {
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hotspot-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.hotspot-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.hotspot-incidents {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-poor);
+  background-color: var(--color-poor-bg);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.hotspot-bar-track {
+  width: 100%;
+  height: 6px;
+  background-color: var(--bg-surface-elevated);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.hotspot-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
+  border-radius: var(--radius-full);
+}
+
+/* Ranking Table */
+.ranking-table-wrap {
+  overflow-x: auto;
+  margin-top: 14px;
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ranking-table th {
+  background-color: var(--bg-surface-elevated);
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-medium);
+}
+
+.ranking-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.ranking-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
