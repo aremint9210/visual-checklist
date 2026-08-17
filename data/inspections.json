@@ -1,0 +1,608 @@
+[
+  {
+    "id": "INSP-20260817-Q75-3TJ8P",
+    "equipmentId": "Q75",
+    "equipmentType": "QC",
+    "inspectorName": "Unassigned",
+    "inspectionDate": "2026-08-17",
+    "inspectionTime": "10:12",
+    "timestamp": "2026-08-17T02:14:03.950Z",
+    "location": "",
+    "shift": "Day Shift",
+    "runningHours": null,
+    "generalNotes": "TQ PO",
+    "signature": null,
+    "summary": {
+      "totalItems": 16,
+      "goodCount": 8,
+      "satisfiedCount": 8,
+      "poorCount": 0,
+      "overallStatus": "SATISFACTORY_WITH_NOTES"
+    },
+    "items": {
+      "1.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.2": {
+        "status": "SATISFIED",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.3": {
+        "status": "SATISFIED",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.4": {
+        "status": "SATISFIED",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.5": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.6": {
+        "status": "SATISFIED",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "2.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "2.2": {
+        "status": "SATISFIED",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "4.4": {
+        "status": "SATISFIED",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "4.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "4.2": {
+        "status": "SATISFIED",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "4.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "5.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "5.2": {
+        "status": "SATISFIED",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "5.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "5.4": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      }
+    }
+  },
+  {
+    "id": "INSP-20260817-Q75-4CRNG",
+    "equipmentId": "Q75",
+    "equipmentType": "QC",
+    "inspectorName": "Aremi / Inspector 1",
+    "inspectionDate": "2026-08-17",
+    "inspectionTime": "10:15",
+    "timestamp": "2026-08-17T02:10:24.051Z",
+    "location": "Berth 4",
+    "shift": "Morning Shift",
+    "runningHours": null,
+    "generalNotes": "Follow-up check on wire rope 2.1. Defect repaired and verified.",
+    "signature": null,
+    "summary": {
+      "totalItems": 26,
+      "goodCount": 26,
+      "satisfiedCount": 0,
+      "poorCount": 0,
+      "overallStatus": "PASSED"
+    },
+    "items": {
+      "1.1": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "1.2": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "1.3": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "1.4": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "1.5": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "1.6": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "2.1": {
+        "status": "GOOD",
+        "remark": "Rope replaced, lubrication applied."
+      },
+      "2.2": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "2.3": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "2.4": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "3.1": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "3.2": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "3.3": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "3.4": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "4.1": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "4.2": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "4.3": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "4.4": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "5.1": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "5.2": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "5.3": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "5.4": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "6.1": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "6.2": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "6.3": {
+        "status": "GOOD",
+        "remark": ""
+      },
+      "6.4": {
+        "status": "GOOD",
+        "remark": ""
+      }
+    }
+  },
+  {
+    "id": "INSP-20260816-Q75",
+    "equipmentId": "Q75",
+    "equipmentType": "QC",
+    "inspectorName": "Aremi / Inspector 1",
+    "inspectionDate": "2026-08-16",
+    "inspectionTime": "14:30",
+    "timestamp": "2026-08-16T14:30:00.000Z",
+    "location": "Berth 4",
+    "shift": "Day Shift",
+    "runningHours": 14250,
+    "generalNotes": "Routine weekly visual check on Q75 prior to vessel berthed.",
+    "summary": {
+      "totalItems": 23,
+      "goodCount": 21,
+      "satisfiedCount": 1,
+      "poorCount": 1,
+      "overallStatus": "ATTENTION_REQUIRED"
+    },
+    "items": {
+      "1.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.2": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.4": {
+        "status": "GOOD",
+        "remark": "Hinge pin lock secure, grease adequate",
+        "tags": [],
+        "photo": null
+      },
+      "1.5": {
+        "status": "GOOD",
+        "remark": "N/A for QC",
+        "tags": [],
+        "photo": null
+      },
+      "1.6": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "2.1": {
+        "status": "POOR",
+        "remark": "Found 3 broken wires near equalizer sheave, needs NDT & replacement schedule.",
+        "tags": [
+          "Broken Wires"
+        ],
+        "photo": null
+      },
+      "2.2": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "2.3": {
+        "status": "SATISFIED",
+        "remark": "Minor groove wear on #2 hoist sheave, monitor next cycle.",
+        "tags": [
+          "Groove Wear"
+        ],
+        "photo": null
+      },
+      "2.4": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "3.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "3.2": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "3.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "3.4": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "4.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "4.2": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "4.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "4.4": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "5.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "5.2": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "5.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "5.4": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "6.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "6.2": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "6.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "6.4": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      }
+    }
+  },
+  {
+    "id": "INSP-20260815-Q72",
+    "equipmentId": "Q72",
+    "equipmentType": "QC",
+    "inspectorName": "Aremi / Inspector 1",
+    "inspectionDate": "2026-08-15",
+    "inspectionTime": "09:15",
+    "timestamp": "2026-08-15T09:15:00.000Z",
+    "location": "Berth 2",
+    "shift": "Morning Shift",
+    "runningHours": 18900,
+    "generalNotes": "All visual checkpoints verified in good condition.",
+    "summary": {
+      "totalItems": 23,
+      "goodCount": 23,
+      "satisfiedCount": 0,
+      "poorCount": 0,
+      "overallStatus": "PASSED"
+    },
+    "items": {
+      "1.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.2": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.4": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.5": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "1.6": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "2.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "2.2": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "2.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "2.4": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "3.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "3.2": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "3.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "3.4": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "4.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "4.2": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "4.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "4.4": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "5.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "5.2": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "5.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "5.4": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "6.1": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "6.2": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "6.3": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      },
+      "6.4": {
+        "status": "GOOD",
+        "remark": "",
+        "tags": [],
+        "photo": null
+      }
+    }
+  }
+]

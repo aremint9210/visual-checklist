@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Port Equipment Visual Inspection & Asset Tracking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+
+  <!-- Top App Navigation Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="app-logo-badge">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M9 11l3 3L22 4"></path>
+          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+        </svg>
+      </div>
+      <div class="header-title-group">
+        <h1 class="header-title">CBM Visual Inspection</h1>
+        <span class="header-subtitle">Port Equipment & Crane Checklist</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div id="sync-status" class="status-pill online" title="Sync Status">
+        <span class="status-dot"></span>
+        <span class="status-label">Online</span>
+      </div>
+      <button id="btn-phone-qr" class="btn-icon" aria-label="Open on Phone QR">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs (Top on Desktop, Bottom on Mobile) -->
+  <nav class="main-nav">
+    <button class="nav-tab active" data-tab="inspect-tab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path>
+        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+      </svg>
+      <span>Inspect</span>
+    </button>
+
+    <button class="nav-tab" data-tab="history-tab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      <span>Track Back</span>
+    </button>
+
+    <button class="nav-tab" data-tab="fleet-tab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+        <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"></path>
+      </svg>
+      <span>Equipment</span>
+    </button>
+
+    <button class="nav-tab" data-tab="export-tab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      <span>Excel Export</span>
+    </button>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="app-main">
+
+    <!-- ============================================== -->
+    <!-- TAB 1: INSPECT (Mobile Ticking Form) -->
+    <!-- ============================================== -->
+    <section id="inspect-tab" class="tab-pane active">
+      
+      <!-- Equipment & Inspection Setup Card -->
+      <div class="card setup-card">
+        <div class="card-header-flex">
+          <div class="card-title-group">
+            <span class="card-tag">NEW INSPECTION</span>
+            <h2 class="card-title">Crane & Inspector Details</h2>
+          </div>
+          <button type="button" id="btn-quick-fill-good" class="btn btn-emerald-outline btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Mark All Good</span>
+          </button>
+        </div>
+
+        <!-- Equipment Selection & Quick Chips -->
+        <div class="form-group">
+          <label class="form-label" for="equipment-id-input">
+            Equipment ID <span class="required-star">*</span>
+          </label>
+          <div class="input-with-icon">
+            <input type="text" id="equipment-id-input" class="form-input text-uppercase font-mono" placeholder="e.g. Q75, Q76, RTG02" autocomplete="off" required>
+            <button type="button" id="btn-clear-equipment" class="btn-clear-input" aria-label="Clear">✕</button>
+          </div>
+          
+          <!-- Quick Equipment Chips -->
+          <div class="quick-chips-wrapper">
+            <span class="chips-label">Quick Select:</span>
+            <div class="chips-list">
+              <button type="button" class="chip-btn" data-equip="Q75" data-type="QC">Q75</button>
+              <button type="button" class="chip-btn" data-equip="Q76" data-type="QC">Q76</button>
+              <button type="button" class="chip-btn" data-equip="Q71" data-type="QC">Q71</button>
+              <button type="button" class="chip-btn" data-equip="Q72" data-type="QC">Q72</button>
+              <button type="button" class="chip-btn" data-equip="Q73" data-type="QC">Q73</button>
+              <button type="button" class="chip-btn" data-equip="Q74" data-type="QC">Q74</button>
+              <button type="button" class="chip-btn" data-equip="RTG01" data-type="RTG">RTG01</button>
+              <button type="button" class="chip-btn" data-equip="RTG02" data-type="RTG">RTG02</button>
+              <button type="button" class="chip-btn" data-equip="RTG03" data-type="RTG">RTG03</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metadata Grid -->
+        <div class="form-row-grid">
+          <div class="form-group">
+            <label class="form-label" for="equipment-type-select">Equipment Type</label>
+            <select id="equipment-type-select" class="form-select">
+              <option value="QC">Quay Crane (QC)</option>
+              <option value="RTG">RTG Crane (RTG)</option>
+              <option value="RMG">Rail Mounted Gantry (RMG)</option>
+              <option value="MHC">Mobile Harbour Crane</option>
+              <option value="RS">Reach Stacker</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inspector-name-input">Inspector Name</label>
+            <input type="text" id="inspector-name-input" class="form-input" placeholder="Your Name / ID">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inspection-date-input">Inspection Date</label>
+            <input type="date" id="inspection-date-input" class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inspection-time-input">Time</label>
+            <input type="time" id="inspection-time-input" class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inspection-location-input">Location / Berth</label>
+            <input type="text" id="inspection-location-input" class="form-input" placeholder="e.g. Berth 4 / Yard Block 3">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inspection-shift-select">Shift</label>
+            <select id="inspection-shift-select" class="form-select">
+              <option value="Day Shift">Day Shift</option>
+              <option value="Night Shift">Night Shift</option>
+              <option value="Morning Shift">Morning Shift</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Inspection Progress Banner -->
+      <div class="progress-bar-card">
+        <div class="progress-info-row">
+          <div class="progress-status-left">
+            <span class="progress-number" id="progress-count">0 / 26</span>
+            <span class="progress-text">Items Checked</span>
+          </div>
+          <div class="progress-badges-right">
+            <span class="stat-badge badge-good" id="badge-good-count">0 Good</span>
+            <span class="stat-badge badge-satisfied" id="badge-satisfied-count">0 Satisfied</span>
+            <span class="stat-badge badge-poor" id="badge-poor-count">0 Poor</span>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill-bar" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Checklist Categories Container (Dynamic from Template) -->
+      <div id="checklist-categories-container" class="checklist-container">
+        <!-- Injected via JavaScript -->
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading Checklist Template...</p>
+        </div>
+      </div>
+
+      <!-- General Notes & Summary Section -->
+      <div class="card notes-card">
+        <h3 class="section-title">General Notes & Action Plan</h3>
+        <p class="section-desc">Add overall findings, maintenance follow-up instructions, or work order recommendations.</p>
+        <textarea id="general-notes-input" class="form-textarea" rows="3" placeholder="e.g. Hoist wire rope 2.1 needs replacement order. Gantry bogies greased."></textarea>
+      </div>
+
+      <!-- Save Inspection Button (Sticky Footer for Mobile) -->
+      <div class="sticky-action-bar">
+        <div class="action-summary">
+          <span id="floating-status-summary">Ready to submit</span>
+        </div>
+        <div class="action-buttons">
+          <button type="button" id="btn-reset-form" class="btn btn-ghost">Reset</button>
+          <button type="button" id="btn-save-inspection" class="btn btn-primary btn-lg">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span>Save Inspection</span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 2: TRACK BACK / HISTORY SEARCH -->
+    <!-- ============================================== -->
+    <section id="history-tab" class="tab-pane">
+      <div class="card search-card">
+        <div class="search-header">
+          <span class="card-tag">HISTORICAL RECORDS</span>
+          <h2 class="card-title">Track Back Inspection Results</h2>
+          <p class="card-subtitle">Search by equipment ID (e.g. <strong>Q75</strong>) to view past checklists, compare findings, and monitor recurring issues.</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-input-group">
+          <div class="input-with-icon">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="history-search-input" class="form-input search-field" placeholder="Search Equipment ID (e.g. Q75, Q72, RTG01)...">
+            <button type="button" id="btn-clear-history-search" class="btn-clear-input">✕</button>
+          </div>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="filter-chips-row">
+          <span class="filter-label">Filter:</span>
+          <button class="filter-pill active" data-status-filter="ALL">All Records</button>
+          <button class="filter-pill" data-status-filter="ATTENTION_REQUIRED">🔴 Defects Found</button>
+          <button class="filter-pill" data-status-filter="SATISFACTORY_WITH_NOTES">🟡 Notes / Satisfied</button>
+          <button class="filter-pill" data-status-filter="PASSED">🟢 All Good</button>
+        </div>
+      </div>
+
+      <!-- History Results List -->
+      <div class="history-results-header">
+        <h3 class="results-title">Inspection Log Timeline</h3>
+        <span class="results-count" id="history-count-badge">Loading records...</span>
+      </div>
+
+      <div id="history-list-container" class="history-list">
+        <!-- Injected via JavaScript -->
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 3: FLEET & ASSET HEALTH DASHBOARD -->
+    <!-- ============================================== -->
+    <section id="fleet-tab" class="tab-pane">
+      <div class="card fleet-header-card">
+        <div class="card-title-group">
+          <span class="card-tag">FLEET OVERVIEW</span>
+          <h2 class="card-title">Equipment Condition & Inspection Status</h2>
+          <p class="card-subtitle">Real-time health overview of all cranes in the yard.</p>
+        </div>
+      </div>
+
+      <div id="fleet-grid-container" class="fleet-grid">
+        <!-- Injected via JavaScript -->
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 4: EXPORT & PHONE CONNECT -->
+    <!-- ============================================== -->
+    <section id="export-tab" class="tab-pane">
+      
+      <!-- Phone QR Card -->
+      <div class="card qr-connect-card">
+        <div class="qr-info-content">
+          <span class="card-tag">MOBILE COMPANION</span>
+          <h2 class="card-title">Tick Checklists on Your Phone</h2>
+          <p class="card-subtitle">Connect your phone to the same Wi-Fi network and scan the QR code below to inspect directly on your mobile device.</p>
+          
+          <div class="qr-url-box">
+            <span class="qr-url-label">Mobile Direct URL:</span>
+            <div class="qr-url-copy-row">
+              <input type="text" id="mobile-url-input" class="form-input font-mono" readonly>
+              <button type="button" id="btn-copy-mobile-url" class="btn btn-secondary btn-sm">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="qr-image-wrapper">
+          <img id="qr-code-img" src="" alt="Mobile QR Code" class="qr-image">
+          <span class="qr-subtext">Scan with Phone Camera</span>
+        </div>
+      </div>
+
+      <!-- Master Excel Export Card -->
+      <div class="card export-actions-card">
+        <span class="card-tag">DATA BACKUP & REPORTS</span>
+        <h2 class="card-title">Download Excel & Data Archives</h2>
+        <p class="card-subtitle">Export all inspection logs to Excel format (.xlsx) or backup data to JSON.</p>
+
+        <div class="export-buttons-grid">
+          <a href="/api/export/excel-all" class="export-btn-card" download>
+            <div class="export-icon-box excel-green">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="8" y1="13" x2="16" y2="13"></line>
+                <line x1="8" y1="17" x2="16" y2="17"></line>
+                <line x1="10" y1="9" x2="8" y2="9"></line>
+              </svg>
+            </div>
+            <div class="export-text">
+              <h4>Master Excel Log (.xlsx)</h4>
+              <p>Consolidated workbook of all historical inspections with summary</p>
+            </div>
+            <span class="btn-arrow">→</span>
+          </a>
+
+          <button type="button" id="btn-backup-json" class="export-btn-card">
+            <div class="export-icon-box blue">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <div class="export-text">
+              <h4>Download JSON Backup</h4>
+              <p>Full raw database backup for offline archiving or restore</p>
+            </div>
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- MODALS -->
+  <!-- ============================================== -->
+
+  <!-- Inspection Detail Modal (Track Back Modal) -->
+  <div id="detail-modal" class="modal-overlay">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge" id="modal-equip-badge">Q75</span>
+          <h3 class="modal-title" id="modal-title">Inspection Report</h3>
+        </div>
+        <button type="button" class="btn-close-modal" id="btn-close-detail-modal">✕</button>
+      </div>
+
+      <div class="modal-body" id="modal-detail-body">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <div class="modal-footer">
+        <a href="#" id="modal-btn-download-excel" class="btn btn-emerald" download>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Download Excel (.xlsx)</span>
+        </a>
+        <button type="button" id="modal-btn-print" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          <span>Print / PDF</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Code Modal (Quick phone access popup) -->
+  <div id="qr-modal" class="modal-overlay">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3 class="modal-title">📱 Open on Mobile Phone</h3>
+        <button type="button" class="btn-close-modal" id="btn-close-qr-modal">✕</button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="text-muted mb-3">Ensure your phone is connected to the same Wi-Fi / Hotspot network, then scan with camera:</p>
+        <div class="qr-container-center">
+          <img id="modal-qr-img" src="" alt="QR Code" class="qr-large-image">
+        </div>
+        <div class="network-badge-box mt-3 font-mono" id="modal-qr-url-text">
+          http://...
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary w-full" id="btn-close-qr-footer">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="/app.js"></script>
+</body>
+</html>
