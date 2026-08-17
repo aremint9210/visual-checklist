@@ -480,6 +480,14 @@
   async function loadNetworkInfo() {
     try {
       const currentOrigin = window.location.origin;
+      if (modalQrUrlText) modalQrUrlText.textContent = currentOrigin;
+      if (mobileUrlInput) mobileUrlInput.value = currentOrigin;
+
+      // Online dynamic QR generator fallback
+      const dynamicQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(currentOrigin)}`;
+      if (modalQrImg && !modalQrImg.src.includes('data:image')) modalQrImg.src = dynamicQrUrl;
+      if (qrCodeImg && !qrCodeImg.src.includes('data:image')) qrCodeImg.src = dynamicQrUrl;
+
       const res = await fetch(`/api/network-info?origin=${encodeURIComponent(currentOrigin)}`);
       if (res.ok) {
         const data = await res.json();
@@ -492,7 +500,7 @@
         if (mobileUrlInput) mobileUrlInput.value = mobileUrl;
       }
     } catch (err) {
-      console.error('Failed to load network info:', err);
+      console.warn('QR network loader fallback used:', err);
     }
   }
 

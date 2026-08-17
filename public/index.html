@@ -425,7 +425,7 @@
         </div>
 
         <div class="qr-image-wrapper">
-          <img id="qr-code-img" src="" alt="Mobile QR Code" class="qr-image">
+          <img id="qr-code-img" src="/cloud_qr.png" alt="Mobile QR Code" class="qr-image">
           <span class="qr-subtext">Scan with Phone Camera</span>
         </div>
       </div>
@@ -525,13 +525,18 @@
       <div class="modal-body text-center">
         <p class="text-muted mb-3">Scan with any phone camera to open the inspection checklist (works anywhere on 4G, 5G, or Wi-Fi):</p>
         <div class="qr-container-center">
-          <img id="modal-qr-img" src="" alt="QR Code" class="qr-large-image">
+          <img id="modal-qr-img" src="/cloud_qr.png" alt="QR Code" class="qr-large-image">
         </div>
         <div class="network-badge-box mt-3 font-mono" id="modal-qr-url-text">
-          http://...
+          https://visual-checklist.onrender.com
         </div>
       </div>
       <div class="modal-footer">
+        <button type="button" class="btn btn-primary w-full" id="btn-close-qr-footer">Done</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Critical Defect Alert Modal (WhatsApp / Email Dispatch) -->
   <div id="alert-modal" class="modal-overlay">
     <div class="modal-content modal-md">
