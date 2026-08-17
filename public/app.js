@@ -1281,7 +1281,7 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
-              <span>View Checklist</span>
+              <span>View</span>
             </button>
 
             <a href="/api/export/excel/${insp.id}" class="btn btn-emerald-outline btn-sm" download>
@@ -1290,8 +1290,16 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              <span>Excel (.xlsx)</span>
+              <span>Excel</span>
             </a>
+
+            <button type="button" class="btn btn-poor-outline btn-sm btn-delete-insp" data-id="${insp.id}" title="Delete Inspection">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+              </svg>
+              <span>Delete</span>
+            </button>
           </div>
         </div>
       `;
@@ -1303,6 +1311,16 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
       btn.addEventListener('click', () => {
         const id = btn.getAttribute('data-id');
         openDetailModal(id);
+      });
+    });
+
+    document.querySelectorAll('.btn-delete-insp').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        if (confirm(`Are you sure you want to permanently delete inspection ${id}?`)) {
+          await deleteInspection(id);
+        }
       });
     });
   }
@@ -1386,7 +1404,52 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
 
     html += `</div>`;
     if (modalDetailBody) modalDetailBody.innerHTML = html;
+
+    const modalBtnDeleteRecord = document.getElementById('modal-btn-delete-record');
+    if (modalBtnDeleteRecord) {
+      modalBtnDeleteRecord.setAttribute('data-id', insp.id);
+    }
+
     detailModal.classList.add('open');
+  }
+
+  async function deleteInspection(id) {
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/inspections/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (res.ok) {
+        showToast(`Inspection deleted successfully!`, 'success');
+        if (detailModal) detailModal.classList.remove('open');
+        await loadInspections();
+        await loadFleetStats();
+      } else {
+        showToast('Failed to delete inspection', 'error');
+      }
+    } catch (e) {
+      console.error('Delete error:', e);
+      showToast('Network error while deleting', 'error');
+    }
+  }
+
+  async function clearAllData() {
+    if (confirm('⚠️ WARNING: This will permanently delete ALL inspection records from the database. Are you sure?')) {
+      if (confirm('Please confirm: Reset and clear all inspection history?')) {
+        try {
+          const res = await fetch('/api/inspections/all', { method: 'DELETE' });
+          if (res.ok) {
+            showToast('All inspection records have been cleared!', 'success');
+            await loadInspections();
+            await loadFleetStats();
+            switchTab('history-tab');
+          } else {
+            showToast('Failed to clear database', 'error');
+          }
+        } catch (e) {
+          console.error('Clear database error:', e);
+          showToast('Failed to clear database', 'error');
+        }
+      }
+    }
   }
 
   // =========================================================================
@@ -1573,6 +1636,21 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
 
     if (btnCloseDetailModal && detailModal) btnCloseDetailModal.addEventListener('click', () => detailModal.classList.remove('open'));
     if (modalBtnPrint) modalBtnPrint.addEventListener('click', () => window.print());
+
+    const modalBtnDeleteRecord = document.getElementById('modal-btn-delete-record');
+    if (modalBtnDeleteRecord) {
+      modalBtnDeleteRecord.addEventListener('click', async () => {
+        const id = modalBtnDeleteRecord.getAttribute('data-id');
+        if (id && confirm(`Permanently delete inspection ${id}?`)) {
+          await deleteInspection(id);
+        }
+      });
+    }
+
+    const btnClearAllData = document.getElementById('btn-clear-all-data');
+    if (btnClearAllData) {
+      btnClearAllData.addEventListener('click', clearAllData);
+    }
 
     if (btnCloseAlertModal && alertModal) btnCloseAlertModal.addEventListener('click', () => alertModal.classList.remove('open'));
     if (btnDismissAlertModal && alertModal) {

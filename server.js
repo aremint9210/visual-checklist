@@ -316,8 +316,13 @@ app.put('/api/inspections/:id', (req, res) => {
   res.json({ success: true, message: 'Inspection updated', inspection: inspections[index] });
 });
 
-// 8. Delete Inspection
+// 8. Delete Single Inspection
 app.delete('/api/inspections/:id', (req, res) => {
+  if (req.params.id === 'all' || req.params.id === 'clear-all') {
+    writeJSON(INSPECTIONS_FILE, []);
+    return res.json({ success: true, message: 'All inspection logs have been cleared.' });
+  }
+
   let inspections = readJSON(INSPECTIONS_FILE, []);
   const initialLength = inspections.length;
   inspections = inspections.filter(item => item.id !== req.params.id);

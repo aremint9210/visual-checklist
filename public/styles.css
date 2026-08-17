@@ -983,6 +983,17 @@ body {
   color: #ffffff;
 }
 
+.btn-poor-outline {
+  background-color: var(--color-poor-bg);
+  border-color: var(--color-poor-border);
+  color: var(--color-poor);
+}
+
+.btn-poor-outline:hover {
+  background-color: var(--color-poor);
+  color: #ffffff;
+}
+
 .btn-secondary {
   background-color: var(--bg-surface-elevated);
   border-color: var(--border-medium);
