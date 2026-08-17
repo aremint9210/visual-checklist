@@ -240,6 +240,7 @@ app.post('/api/inspections', (req, res) => {
       equipmentId: cleanEquip,
       equipmentType: data.equipmentType || 'QC',
       inspectorName: data.inspectorName || 'Unassigned',
+      inspectorStaffId: data.inspectorStaffId || '',
       inspectionDate,
       inspectionTime,
       timestamp,
@@ -623,7 +624,7 @@ app.get('/api/export/excel/:id', async (req, res) => {
 
     // Info header rows
     sheet.addRow(['Equipment ID:', insp.equipmentId, 'Type:', insp.equipmentType, 'Date:', `${insp.inspectionDate} ${insp.inspectionTime || ''}`]);
-    sheet.addRow(['Inspector:', insp.inspectorName, 'Location:', insp.location || 'N/A', 'Shift / Hours:', `${insp.shift || 'N/A'} (${insp.runningHours ? insp.runningHours + ' hrs' : '-'})`]);
+    sheet.addRow(['Inspector Name:', insp.inspectorName, 'Staff ID:', insp.inspectorStaffId || 'N/A', 'Location / Shift:', `${insp.location || 'N/A'} (${insp.shift || 'Shift'})`]);
     sheet.addRow(['Overall Result:', insp.summary?.overallStatus || 'N/A', 'Score:', `GOOD: ${insp.summary?.goodCount || 0} | SATISFIED: ${insp.summary?.satisfiedCount || 0} | POOR: ${insp.summary?.poorCount || 0}`, '', '']);
     
     // Style header rows
@@ -709,33 +710,37 @@ app.get('/api/export/excel/:id', async (req, res) => {
     });
 
     // Notes footer
-    if (insp.generalNotes) {
-      sheet.addRow([]);
-      const notesHeader = sheet.addRow(['General Notes / Defect Action Plan:', '', '', '', '', '']);
-      notesHeader.font = { bold: true };
-      const notesContent = sheet.addRow([insp.generalNotes, '', '', '', '', '']);
-      sheet.mergeCells(`A${notesContent.number}:F${notesContent.number}`);
-    }
+        }
+      });
+    });
 
-    const filename = `Visual_Inspection_${insp.equipmentId}_${insp.inspectionDate}.xlsx`;
+    // Notes Row at bottom
+    sheet.addRow([]);
+    const notesRow = sheet.addRow(['GENERAL NOTES & ACTION PLAN:', insp.generalNotes || 'None logged.', '', '', '', '']);
+    sheet.mergeCells(`B${notesRow.number}:F${notesRow.number}`);
+    notesRow.height = 24;
+    notesRow.font = { name: 'Arial', size: 10, bold: true };
+    notesRow.getCell(1).font = { bold: true, color: { argb: 'FF1E293B' } };
+
+    const filename = `Inspection_${insp.equipmentId}_${insp.inspectionDate}_${insp.id}.xlsx`;
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
     await workbook.xlsx.write(res);
     res.end();
   } catch (err) {
-    console.error('Error generating Excel:', err);
-    res.status(500).json({ error: 'Failed to generate Excel report', details: err.message });
+    console.error('Error generating single Excel:', err);
+    res.status(500).json({ error: 'Failed to generate Excel', details: err.message });
   }
 });
 
-// 12. Master Consolidated Excel Export (All Inspections)
+// 12. Master Excel Export (All Inspections Consolidated Log)
 app.get('/api/export/excel-all', async (req, res) => {
   try {
     const inspections = readJSON(INSPECTIONS_FILE, []);
-    const template = readJSON(TEMPLATE_FILE, { categories: [] });
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Visual Inspection System Master Export';
+    workbook.creator = 'Visual Inspection System';
+    workbook.created = new Date();
 
     // Summary Sheet
     const summarySheet = workbook.addWorksheet('Inspection Log');
@@ -745,7 +750,8 @@ app.get('/api/export/excel-all', async (req, res) => {
       { header: 'Type', key: 'equipmentType', width: 10 },
       { header: 'Date', key: 'inspectionDate', width: 14 },
       { header: 'Time', key: 'inspectionTime', width: 10 },
-      { header: 'Inspector', key: 'inspectorName', width: 22 },
+      { header: 'Inspector Name', key: 'inspectorName', width: 20 },
+      { header: 'Staff ID', key: 'inspectorStaffId', width: 14 },
       { header: 'Overall Status', key: 'overallStatus', width: 22 },
       { header: 'Good Items', key: 'goodCount', width: 12 },
       { header: 'Satisfied Items', key: 'satisfiedCount', width: 14 },
@@ -766,6 +772,7 @@ app.get('/api/export/excel-all', async (req, res) => {
         inspectionDate: insp.inspectionDate,
         inspectionTime: insp.inspectionTime,
         inspectorName: insp.inspectorName,
+        inspectorStaffId: insp.inspectorStaffId || '-',
         overallStatus: insp.summary?.overallStatus,
         goodCount: insp.summary?.goodCount,
         satisfiedCount: insp.summary?.satisfiedCount,

@@ -90,6 +90,7 @@
     equipmentId: '',
     equipmentType: 'QC',
     inspectorName: '',
+    inspectorStaffId: '',
     inspectionDate: '',
     inspectionTime: '',
     location: '',
@@ -113,6 +114,7 @@
   const equipmentInput = document.getElementById('equipment-id-input');
   const equipmentTypeSelect = document.getElementById('equipment-type-select');
   const inspectorInput = document.getElementById('inspector-name-input');
+  const inspectorIdInput = document.getElementById('inspector-id-input');
   const dateInput = document.getElementById('inspection-date-input');
   const timeInput = document.getElementById('inspection-time-input');
   const locationInput = document.getElementById('inspection-location-input');
@@ -284,6 +286,11 @@
       if (inspectorInput && !inspectorInput.value) inspectorInput.value = savedInspector;
       const feedbackAuthor = document.getElementById('feedback-author-input');
       if (feedbackAuthor && !feedbackAuthor.value) feedbackAuthor.value = savedInspector;
+    }
+
+    const savedStaffId = localStorage.getItem('cbm_inspector_staff_id');
+    if (savedStaffId && inspectorIdInput && !inspectorIdInput.value) {
+      inspectorIdInput.value = savedStaffId;
     }
   }
 
@@ -999,6 +1006,7 @@
     if (equipmentInput) currentDraft.equipmentId = equipmentInput.value.trim().toUpperCase();
     if (equipmentTypeSelect) currentDraft.equipmentType = equipmentTypeSelect.value;
     if (inspectorInput) currentDraft.inspectorName = inspectorInput.value.trim();
+    if (inspectorIdInput) currentDraft.inspectorStaffId = inspectorIdInput.value.trim();
     if (dateInput) currentDraft.inspectionDate = dateInput.value;
     if (timeInput) currentDraft.inspectionTime = timeInput.value;
     if (locationInput) currentDraft.location = locationInput.value.trim();
@@ -1008,6 +1016,9 @@
     localStorage.setItem('cbm_inspection_draft', JSON.stringify(currentDraft));
     if (currentDraft.inspectorName) {
       localStorage.setItem('cbm_inspector_name', currentDraft.inspectorName);
+    }
+    if (currentDraft.inspectorStaffId) {
+      localStorage.setItem('cbm_inspector_staff_id', currentDraft.inspectorStaffId);
     }
   }
 
@@ -1024,6 +1035,7 @@
         }
         if (currentDraft.equipmentType && equipmentTypeSelect) equipmentTypeSelect.value = currentDraft.equipmentType;
         if (currentDraft.inspectorName && inspectorInput) inspectorInput.value = currentDraft.inspectorName;
+        if (currentDraft.inspectorStaffId && inspectorIdInput) inspectorIdInput.value = currentDraft.inspectorStaffId;
         if (currentDraft.location && locationInput) locationInput.value = currentDraft.location;
         if (currentDraft.shift && shiftSelect) shiftSelect.value = currentDraft.shift;
         if (currentDraft.generalNotes && notesInput) notesInput.value = currentDraft.generalNotes;
@@ -1127,7 +1139,7 @@
 `🚨 CRITICAL DEFECT ALERT - PORT INSPECTION
 Equipment: ${insp.equipmentId} (${insp.equipmentType})
 Date: ${insp.inspectionDate} ${insp.inspectionTime || ''}
-Inspector: ${insp.inspectorName}
+Inspector: ${insp.inspectorName} ${insp.inspectorStaffId ? '(Staff ID: ' + insp.inspectorStaffId + ')' : ''}
 Location: ${insp.location || 'Port Yard'} (${insp.shift || 'Shift'})
 
 ATTENTION ITEMS FLAGGED:
@@ -1249,7 +1261,7 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
-              <span>${escapeHtml(insp.inspectorName || 'Inspector')}</span>
+              <span>${escapeHtml(insp.inspectorName || 'Inspector')} ${insp.inspectorStaffId ? '<span class="font-mono" style="color: var(--text-muted); font-size: 11px;">(' + escapeHtml(insp.inspectorStaffId) + ')</span>' : ''}</span>
             </div>
 
             <div class="meta-item">
@@ -1349,9 +1361,11 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
       <div style="background-color: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-md); margin-bottom: 16px;">
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 13px;">
           <div><strong>Date & Time:</strong> ${insp.inspectionDate} ${insp.inspectionTime || ''}</div>
-          <div><strong>Inspector:</strong> ${escapeHtml(insp.inspectorName || '')}</div>
           <div><strong>Equipment Type:</strong> ${escapeHtml(insp.equipmentType || 'QC')}</div>
-          <div><strong>Location / Shift:</strong> ${escapeHtml(insp.location || '-')} (${escapeHtml(insp.shift || '-')})</div>
+          <div><strong>Inspector Name:</strong> ${escapeHtml(insp.inspectorName || '')}</div>
+          <div><strong>Staff / Inspector ID:</strong> <span class="font-mono">${escapeHtml(insp.inspectorStaffId || 'N/A')}</span></div>
+          <div><strong>Location:</strong> ${escapeHtml(insp.location || '-')}</div>
+          <div><strong>Shift / Hours:</strong> ${escapeHtml(insp.shift || '-')} (${insp.runningHours ? insp.runningHours + ' hrs' : '-'})</div>
         </div>
       </div>
 
@@ -1671,7 +1685,7 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
       });
     }
 
-    [inspectorInput, dateInput, timeInput, locationInput, shiftSelect, equipmentTypeSelect, notesInput].forEach(elem => {
+    [inspectorInput, inspectorIdInput, dateInput, timeInput, locationInput, shiftSelect, equipmentTypeSelect, notesInput].forEach(elem => {
       if (elem) elem.addEventListener('change', saveDraftToStorage);
     });
 
