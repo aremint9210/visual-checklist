@@ -192,16 +192,16 @@
 
   async function loadNetworkInfo() {
     try {
-      const res = await fetch('/api/network-info');
+      const currentOrigin = window.location.origin;
+      const res = await fetch(`/api/network-info?origin=${encodeURIComponent(currentOrigin)}`);
       const data = await res.json();
+      const mobileUrl = data.mobileUrl || currentOrigin;
       if (data.qrCodeDataUrl) {
         modalQrImg.src = data.qrCodeDataUrl;
         if (qrCodeImg) qrCodeImg.src = data.qrCodeDataUrl;
       }
-      if (data.mobileUrl) {
-        modalQrUrlText.textContent = data.mobileUrl;
-        if (mobileUrlInput) mobileUrlInput.value = data.mobileUrl;
-      }
+      modalQrUrlText.textContent = mobileUrl;
+      if (mobileUrlInput) mobileUrlInput.value = mobileUrl;
     } catch (err) {
       console.error('Failed to load network info:', err);
     }

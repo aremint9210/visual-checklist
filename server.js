@@ -92,13 +92,25 @@ app.get('/api/checklist-template', (req, res) => {
   res.json(template);
 });
 
-// 2. Network Info & QR Code
+// 2. Network Info & QR Code (supports both local network and public cloud URLs)
 app.get('/api/network-info', async (req, res) => {
   try {
     const ips = getLocalIPAddresses();
     const primaryIP = ips.length > 0 ? ips[0].ip : 'localhost';
-    const mobileUrl = `http://${primaryIP}:${PORT}`;
-    const qrCodeDataUrl = await QRCode.toDataURL(mobileUrl, {
+
+    // Determine base URL: check client query, proxy headers (Render/Vercel), or local fallback
+    let baseUrl = req.query.origin;
+    if (!baseUrl) {
+      const forwardedHost = req.headers['x-forwarded-host'] || req.headers.host;
+      const forwardedProto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+      if (forwardedHost && !forwardedHost.includes('localhost') && !forwardedHost.includes('127.0.0.1')) {
+        baseUrl = `${forwardedProto}://${forwardedHost}`;
+      } else {
+        baseUrl = `http://${primaryIP}:${PORT}`;
+      }
+    }
+
+    const qrCodeDataUrl = await QRCode.toDataURL(baseUrl, {
       width: 320,
       margin: 2,
       color: {
@@ -111,8 +123,9 @@ app.get('/api/network-info', async (req, res) => {
       port: PORT,
       interfaces: ips,
       primaryIP,
-      mobileUrl,
-      qrCodeDataUrl
+      mobileUrl: baseUrl,
+      qrCodeDataUrl,
+      isCloud: !baseUrl.includes('localhost') && !baseUrl.includes('172.') && !baseUrl.includes('192.168.') && !baseUrl.includes('10.')
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to generate network info', details: err.message });
