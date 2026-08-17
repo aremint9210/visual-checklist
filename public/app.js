@@ -280,8 +280,10 @@
     if (timeInput && !timeInput.value) timeInput.value = `${hh}:${min}`;
 
     const savedInspector = localStorage.getItem('cbm_inspector_name');
-    if (savedInspector && inspectorInput && !inspectorInput.value) {
-      inspectorInput.value = savedInspector;
+    if (savedInspector) {
+      if (inspectorInput && !inspectorInput.value) inspectorInput.value = savedInspector;
+      const feedbackAuthor = document.getElementById('feedback-author-input');
+      if (feedbackAuthor && !feedbackAuthor.value) feedbackAuthor.value = savedInspector;
     }
   }
 
@@ -318,6 +320,8 @@
       loadFleetStats();
     } else if (tabId === 'cbm-tab') {
       loadCBMAnalytics();
+    } else if (tabId === 'feedback-tab') {
+      loadFeedbacks();
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1453,6 +1457,97 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
   }
 
   // =========================================================================
+  // TEAM FEEDBACK & SUGGESTIONS
+  // =========================================================================
+  let feedbacks = [];
+
+  async function loadFeedbacks() {
+    const listContainer = document.getElementById('feedback-list-container');
+    const countBadge = document.getElementById('feedback-count-badge');
+    if (!listContainer) return;
+
+    try {
+      const res = await fetch('/api/feedback');
+      if (res.ok) {
+        feedbacks = await res.json();
+      }
+    } catch (e) {
+      console.error('Error loading feedbacks:', e);
+    }
+
+    if (countBadge) countBadge.textContent = `${feedbacks.length} Idea(s) Posted`;
+
+    if (feedbacks.length === 0) {
+      listContainer.innerHTML = `
+        <div class="card text-center" style="padding: 30px;">
+          <p class="text-muted">No feedback posted yet. Be the first to share an idea with your team!</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    feedbacks.forEach(fb => {
+      const initial = (fb.author || 'T').charAt(0).toUpperCase();
+      const stars = '⭐'.repeat(fb.rating || 5);
+      const dateStr = fb.createdAt ? new Date(fb.createdAt).toLocaleDateString() : 'Recent';
+
+      html += `
+        <div class="feedback-card" id="feedback-item-${fb.id}">
+          <div class="feedback-card-top">
+            <div class="feedback-author-row">
+              <div class="feedback-avatar">${initial}</div>
+              <div>
+                <div class="feedback-meta-name">${escapeHtml(fb.author || 'Team Member')}</div>
+                <div class="feedback-meta-role">${escapeHtml(fb.role || 'Technician')}</div>
+              </div>
+            </div>
+            <div class="feedback-tags-row">
+              <span class="feedback-category-pill">${escapeHtml(fb.category || 'General')}</span>
+              <span style="font-size: 11px;">${stars}</span>
+            </div>
+          </div>
+
+          <div class="feedback-message-text">
+            ${escapeHtml(fb.message)}
+          </div>
+
+          <div class="feedback-footer-row">
+            <span>📅 ${dateStr}</span>
+            <button type="button" class="btn-upvote" data-id="${fb.id}">
+              👍 <span>Helpful (${fb.upvotes || 0})</span>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    listContainer.innerHTML = html;
+
+    document.querySelectorAll('.btn-upvote').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        await upvoteFeedback(id);
+      });
+    });
+  }
+
+  async function upvoteFeedback(id) {
+    try {
+      const res = await fetch(`/api/feedback/${id}/upvote`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        const fb = feedbacks.find(f => f.id === id);
+        if (fb) fb.upvotes = data.upvotes;
+        loadFeedbacks();
+        if (navigator.vibrate) navigator.vibrate(10);
+      }
+    } catch (e) {
+      console.error('Error upvoting:', e);
+    }
+  }
+
+  // =========================================================================
   // FLEET GRID DASHBOARD
   // =========================================================================
 
@@ -1685,6 +1780,58 @@ ${insp.generalNotes || 'Immediate maintenance review requested.'}
         dlAnchor.click();
         dlAnchor.remove();
         showToast('Backup JSON downloaded', 'success');
+      });
+    }
+
+    // Team Feedback Form
+    const formFeedback = document.getElementById('form-submit-feedback');
+    const feedbackAuthor = document.getElementById('feedback-author-input');
+    const feedbackRole = document.getElementById('feedback-role-select');
+    const feedbackCategory = document.getElementById('feedback-category-select');
+    const feedbackRating = document.getElementById('feedback-rating-select');
+    const feedbackMessage = document.getElementById('feedback-message-input');
+    const btnVoiceFeedback = document.getElementById('btn-voice-feedback');
+
+    if (btnVoiceFeedback && feedbackMessage) {
+      btnVoiceFeedback.addEventListener('click', () => {
+        startListening(feedbackMessage, btnVoiceFeedback);
+      });
+    }
+
+    if (formFeedback) {
+      formFeedback.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = feedbackMessage ? feedbackMessage.value.trim() : '';
+        if (!msg) {
+          showToast('Please enter your feedback message', 'error');
+          return;
+        }
+
+        const payload = {
+          author: feedbackAuthor ? feedbackAuthor.value.trim() : 'Team Member',
+          role: feedbackRole ? feedbackRole.value : 'Technician',
+          category: feedbackCategory ? feedbackCategory.value : 'General Suggestion',
+          rating: feedbackRating ? feedbackRating.value : 5,
+          message: msg
+        };
+
+        try {
+          const res = await fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            showToast('Thank you! Your feedback was submitted.', 'success');
+            if (feedbackMessage) feedbackMessage.value = '';
+            await loadFeedbacks();
+          } else {
+            showToast('Failed to submit feedback', 'error');
+          }
+        } catch (err) {
+          showToast('Network error while sending feedback', 'error');
+        }
       });
     }
 

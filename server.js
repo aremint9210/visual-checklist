@@ -787,6 +787,67 @@ app.get('/api/export/excel-all', async (req, res) => {
   }
 });
 
+// ============================================================================
+// 15. TEAM FEEDBACK & SUGGESTIONS SYSTEM
+// ============================================================================
+const FEEDBACK_FILE = path.join(DATA_DIR, 'feedback.json');
+
+app.get('/api/feedback', (req, res) => {
+  const feedbacks = readJSON(FEEDBACK_FILE, [
+    {
+      id: "FB-001",
+      author: "Aremi",
+      role: "CBM Lead",
+      category: "Feature Request",
+      message: "The 1-tap WhatsApp alert is super helpful for notifying duty engineers during night shift!",
+      rating: 5,
+      upvotes: 4,
+      createdAt: new Date().toISOString()
+    }
+  ]);
+  res.json(feedbacks);
+});
+
+app.post('/api/feedback', (req, res) => {
+  const { author, role, category, message, rating } = req.body;
+  if (!message || !message.trim()) {
+    return res.status(400).json({ error: 'Feedback message is required' });
+  }
+
+  const feedbacks = readJSON(FEEDBACK_FILE, []);
+  const newFeedback = {
+    id: `FB-${Date.now().toString(36).toUpperCase()}`,
+    author: author ? author.trim() : 'Team Member',
+    role: role || 'Technician',
+    category: category || 'General Suggestion',
+    message: message.trim(),
+    rating: parseInt(rating, 10) || 5,
+    upvotes: 0,
+    createdAt: new Date().toISOString()
+  };
+
+  feedbacks.unshift(newFeedback);
+  writeJSON(FEEDBACK_FILE, feedbacks);
+  res.json({ success: true, message: 'Feedback submitted successfully', feedback: newFeedback });
+});
+
+app.post('/api/feedback/:id/upvote', (req, res) => {
+  const feedbacks = readJSON(FEEDBACK_FILE, []);
+  const fb = feedbacks.find(f => f.id === req.params.id);
+  if (!fb) return res.status(404).json({ error: 'Feedback not found' });
+
+  fb.upvotes = (fb.upvotes || 0) + 1;
+  writeJSON(FEEDBACK_FILE, feedbacks);
+  res.json({ success: true, upvotes: fb.upvotes });
+});
+
+app.delete('/api/feedback/:id', (req, res) => {
+  let feedbacks = readJSON(FEEDBACK_FILE, []);
+  feedbacks = feedbacks.filter(f => f.id !== req.params.id);
+  writeJSON(FEEDBACK_FILE, feedbacks);
+  res.json({ success: true, message: 'Feedback removed' });
+});
+
 // Start Server
 app.listen(PORT, '0.0.0.0', () => {
   const ips = getLocalIPAddresses();

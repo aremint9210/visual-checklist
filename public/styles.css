@@ -1893,3 +1893,118 @@ body {
   background-color: rgba(255, 255, 255, 0.02);
 }
 
+/* ==========================================================================
+   FEEDBACK & SUGGESTIONS BOARD
+   ========================================================================== */
+.feedback-card {
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color var(--transition-fast);
+}
+
+.feedback-card:hover {
+  border-color: var(--color-primary);
+}
+
+.feedback-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.feedback-author-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.feedback-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-primary), #4338ca);
+  color: #ffffff;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.feedback-meta-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.feedback-meta-role {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.feedback-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.feedback-category-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-app);
+  color: var(--color-primary);
+  border: 1px solid var(--border-medium);
+}
+
+.feedback-message-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  background-color: var(--bg-app);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-primary);
+}
+
+.feedback-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding-top: 6px;
+}
+
+.btn-upvote {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-upvote:hover {
+  background-color: var(--color-good-bg);
+  border-color: var(--color-good-border);
+  color: var(--color-good);
+  transform: translateY(-1px);
+}
+
+
